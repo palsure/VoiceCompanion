@@ -2,7 +2,7 @@
 
 # Voice Vision Companion Setup Script
 
-echo "🚀 Setting up EchoSight..."
+echo "🚀 Setting up VoiceLens..."
 
 # Check Node.js version
 if ! command -v node &> /dev/null; then

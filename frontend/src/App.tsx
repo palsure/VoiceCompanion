@@ -30,7 +30,7 @@ function App() {
   return (
     <div className="app">
       <header className="app-header">
-        <h1>EchoSight</h1>
+        <h1>VoiceLens</h1>
         <p className="subtitle">Your intelligent accessibility assistant</p>
       </header>
       

@@ -1,6 +1,6 @@
-# EchoSight
+# VoiceLens
 
-**EchoSight** - An intelligent, voice-driven accessibility assistant that helps users with visual impairments navigate daily life through natural conversation. Built with ElevenLabs for natural voice interaction and Google Cloud Vertex AI/Gemini for intelligent understanding.
+**VoiceLens** - An intelligent, voice-driven accessibility assistant that helps users with visual impairments navigate daily life through natural conversation. Built with ElevenLabs for natural voice interaction and Google Cloud Vertex AI/Gemini for intelligent understanding.
 
 ## Features
 
@@ -19,9 +19,9 @@
 - **Vision**: Google Cloud Vision API
 - **Deployment**: Google Cloud Run
 
-## What is EchoSight?
+## What is VoiceLens?
 
-**EchoSight** combines the power of voice (Echo) and vision (Sight) to create an intelligent accessibility companion. It helps users with visual impairments navigate daily life through natural conversation, using AI to see, understand, and describe the world around them.
+**VoiceLens** combines the power of voice and vision (lens) to create an intelligent accessibility companion. It helps users with visual impairments navigate daily life through natural conversation, using AI to see, understand, and describe the world around them.
 
 ## Prerequisites
 

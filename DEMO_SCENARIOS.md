@@ -1,6 +1,6 @@
-# Demo Scenarios for EchoSight
+# Demo Scenarios for VoiceLens
 
-This document outlines key demo scenarios to showcase the capabilities of EchoSight.
+This document outlines key demo scenarios to showcase the capabilities of VoiceLens.
 
 ## Scenario 1: Visual Scene Description
 

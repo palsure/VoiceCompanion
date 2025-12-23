@@ -1,8 +1,8 @@
-# EchoSight - Project Summary
+# VoiceLens - Project Summary
 
 ## Overview
 
-**EchoSight** is an intelligent, voice-driven accessibility assistant that helps users with visual impairments navigate daily life through natural conversation. It combines real-time visual understanding with practical daily living support.
+**VoiceLens** is an intelligent, voice-driven accessibility assistant that helps users with visual impairments navigate daily life through natural conversation. It combines real-time visual understanding with practical daily living support.
 
 ## Problem Statement
 

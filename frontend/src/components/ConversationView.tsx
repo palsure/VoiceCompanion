@@ -15,7 +15,7 @@ const ConversationView = ({ messages }: ConversationViewProps) => {
     <div className="conversation-view" role="log" aria-live="polite" aria-atomic="false">
       {messages.length === 0 ? (
         <div className="empty-state">
-          <h2>Welcome to EchoSight</h2>
+          <h2>Welcome to VoiceLens</h2>
           <p>Start a conversation by clicking the microphone button or enabling voice commands.</p>
           <div className="feature-list">
             <div className="feature-item">

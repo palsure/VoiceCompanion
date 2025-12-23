@@ -1,5 +1,5 @@
 {
-  "name": "echosight-backend",
+  "name": "voice-lens-backend",
   "version": "1.0.0",
   "description": "Backend server for Voice Vision Companion",
   "main": "dist/server.js",

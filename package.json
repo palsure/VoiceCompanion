@@ -1,5 +1,5 @@
 {
-  "name": "echosight",
+  "name": "voice-lens",
   "version": "1.0.0",
   "description": "Voice-powered accessibility companion using ElevenLabs and Google Cloud AI",
   "private": true,
