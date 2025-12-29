@@ -5,21 +5,34 @@ class VisionService {
   private client: ImageAnnotatorClient | null = null
 
   constructor() {
-    if (config.googleApplicationCredentials || config.googleCloudProjectId) {
-      try {
-        this.client = new ImageAnnotatorClient({
-          projectId: config.googleCloudProjectId,
-          keyFilename: config.googleApplicationCredentials,
-        })
-      } catch (error) {
-        console.warn('Vision API client initialization failed:', error)
-        console.warn('Vision features will be limited. Make sure GOOGLE_APPLICATION_CREDENTIALS is set.')
+    // Try to initialize Vision API client
+    // Will use Application Default Credentials if keyFilename is not provided
+    try {
+      const clientConfig: any = {}
+      
+      if (config.googleCloudProjectId) {
+        clientConfig.projectId = config.googleCloudProjectId
       }
+      
+      // Only use keyFilename if explicitly provided (bypasses org policy)
+      if (config.googleApplicationCredentials) {
+        clientConfig.keyFilename = config.googleApplicationCredentials
+      }
+      // Otherwise, will use Application Default Credentials (ADC)
+      // Set up with: gcloud auth application-default login
+      
+      this.client = new ImageAnnotatorClient(clientConfig)
+    } catch (error) {
+      console.warn('Vision API client initialization failed:', error)
+      console.warn('Vision features will be limited.')
+      console.warn('Options:')
+      console.warn('1. Set GOOGLE_APPLICATION_CREDENTIALS to key file path')
+      console.warn('2. Use Application Default Credentials: gcloud auth application-default login')
+      this.client = null
     }
   }
 
   private base64ToBuffer(base64String: string): Buffer {
-    // Remove data URL prefix if present
     const base64Data = base64String.includes(',') 
       ? base64String.split(',')[1] 
       : base64String
@@ -39,7 +52,6 @@ class VisionService {
 
       const detections = result.textAnnotations
       if (detections && detections.length > 0) {
-        // First annotation contains all text
         return detections[0].description || ''
       }
       return 'No text found in image'
@@ -76,7 +88,6 @@ class VisionService {
       return objects
     } catch (error: any) {
       console.error('Vision API object detection error:', error)
-      // Return empty array instead of throwing for graceful degradation
       return []
     }
   }
@@ -84,35 +95,92 @@ class VisionService {
   async analyzeImage(imageData: string): Promise<{
     text?: string
     objects?: Array<{ name: string; confidence: number }>
+    labels?: Array<{ name: string; score: number }>
     description: string
   }> {
     try {
-      const [text, objects] = await Promise.all([
+      const [text, objects, labels] = await Promise.all([
         this.extractText(imageData).catch(() => undefined),
         this.detectObjects(imageData).catch(() => []),
+        this.detectLabels(imageData).catch(() => [])
       ])
 
-      // Build description from extracted data
-      let description = ''
-      if (text && text.trim()) {
-        description += `Text found: ${text}\n`
-      }
-      if (objects.length > 0) {
-        description += `Objects detected: ${objects.map(o => o.name).join(', ')}`
-      }
-      if (!description) {
-        description = 'Image analyzed, but no specific text or objects were clearly identified.'
-      }
+      // Generate comprehensive description from all Vision API results
+      const description = this.generateDescription({ text, objects, labels })
 
       return {
         text,
         objects,
+        labels,
         description,
       }
     } catch (error: any) {
       console.error('Image analysis error:', error)
       throw error
     }
+  }
+
+  async detectLabels(imageData: string): Promise<Array<{ name: string; score: number }>> {
+    if (!this.client) {
+      throw new Error('Vision API not configured. Please set up Google Cloud credentials.')
+    }
+
+    try {
+      const imageBuffer = this.base64ToBuffer(imageData)
+      const [result] = await this.client.labelDetection({
+        image: { content: imageBuffer },
+      })
+
+      const labels = result.labelAnnotations
+      if (labels && labels.length > 0) {
+        return labels
+          .filter((label: any) => label.score && label.score > 0.5)
+          .map((label: any) => ({
+            name: label.description || '',
+            score: label.score || 0,
+          }))
+          .slice(0, 10) // Limit to top 10 labels
+      }
+      return []
+    } catch (error: any) {
+      console.error('Vision API label detection error:', error)
+      return []
+    }
+  }
+
+  generateDescription(analysis: {
+    text?: string
+    objects?: Array<{ name: string; confidence: number }>
+    labels?: Array<{ name: string; score: number }>
+  }): string {
+    const parts: string[] = []
+
+    // Add text if found
+    if (analysis.text && analysis.text.trim() && analysis.text !== 'No text found in image') {
+      parts.push(`Text found in the image: ${analysis.text}`)
+    }
+
+    // Add objects if detected
+    if (analysis.objects && analysis.objects.length > 0) {
+      const objectNames = analysis.objects.map(o => o.name).join(', ')
+      parts.push(`Objects detected: ${objectNames}`)
+    }
+
+    // Add labels for scene context
+    if (analysis.labels && analysis.labels.length > 0) {
+      const topLabels = analysis.labels
+        .slice(0, 5)
+        .map(l => l.name)
+        .join(', ')
+      parts.push(`Scene contains: ${topLabels}`)
+    }
+
+    // Create a natural language description
+    if (parts.length > 0) {
+      return parts.join('. ') + '.'
+    }
+
+    return 'Image analyzed using Google Vision API. The image appears to be a photograph or image, but specific details could not be clearly identified.'
   }
 }
 

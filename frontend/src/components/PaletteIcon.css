@@ -1,0 +1,23 @@
+.palette-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.palette-icon svg {
+  filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.1));
+}
+
+.palette-icon.animated {
+  animation: float 3s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px) rotate(-5deg);
+  }
+  50% {
+    transform: translateY(-10px) rotate(5deg);
+  }
+}
+

@@ -1,0 +1,63 @@
+{
+  "expo": {
+    "name": "VoiceCompanion",
+    "slug": "voicecompanion",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "icon": "./assets/icon.png",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.voicecompanion.app",
+      "infoPlist": {
+        "NSCameraUsageDescription": "VoiceCompanion needs camera access to help you see and read documents.",
+        "NSMicrophoneUsageDescription": "VoiceCompanion needs microphone access for voice conversations.",
+        "NSPhotoLibraryUsageDescription": "VoiceCompanion needs photo library access to analyze images.",
+        "NSPhotoLibraryAddUsageDescription": "VoiceCompanion needs permission to save generated images to your photo library."
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#ffffff"
+      },
+      "package": "com.voicecompanion.app",
+      "permissions": [
+        "CAMERA",
+        "RECORD_AUDIO",
+        "READ_EXTERNAL_STORAGE",
+        "WRITE_EXTERNAL_STORAGE",
+        "READ_MEDIA_IMAGES"
+      ]
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Allow VoiceCompanion to access your camera to help you see and read documents."
+        }
+      ],
+      [
+        "expo-media-library",
+        {
+          "photosPermission": "Allow VoiceCompanion to access your photos to save generated images.",
+          "savePhotosPermission": "Allow VoiceCompanion to save photos to your gallery.",
+          "isAccessMediaLocationEnabled": false
+        }
+      ]
+    ]
+  }
+}
+
+

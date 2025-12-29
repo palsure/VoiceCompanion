@@ -1,9 +1,11 @@
 import dotenv from 'dotenv'
 
+// Load .env file if it exists (for local development)
+// In Docker, environment variables are provided via docker-compose env_file
 dotenv.config()
 
 export const config = {
-  port: process.env.PORT || 8080,
+  port: process.env.PORT || 5000,
   nodeEnv: process.env.NODE_ENV || 'development',
   
   // ElevenLabs
@@ -15,15 +17,4 @@ export const config = {
   vertexAiLocation: process.env.VERTEX_AI_LOCATION || 'us-central1',
   geminiApiKey: process.env.GEMINI_API_KEY || '',
 }
-
-// Validate required configuration
-if (!config.elevenLabsApiKey && config.nodeEnv === 'production') {
-  console.warn('Warning: ELEVENLABS_API_KEY not set')
-}
-
-if (!config.geminiApiKey && config.nodeEnv === 'production') {
-  console.warn('Warning: GEMINI_API_KEY not set')
-}
-
-export default config
 

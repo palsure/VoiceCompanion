@@ -1,7 +1,7 @@
 {
-  "name": "voice-lens",
+  "name": "voicecompanion",
   "version": "1.0.0",
-  "description": "Voice-powered accessibility companion using ElevenLabs and Google Cloud AI",
+  "description": "VoiceCompanion - Intelligent voice assistant for accessibility & language learning",
   "private": true,
   "scripts": {
     "dev:frontend": "cd frontend && npm run dev",

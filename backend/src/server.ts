@@ -1,47 +1,55 @@
 import express from 'express'
 import cors from 'cors'
-import dotenv from 'dotenv'
+import { config } from './config.js'
 import conversationRoutes from './routes/conversation.js'
+import feedbackRoutes from './routes/feedback.js'
+import progressRoutes from './routes/progress.js'
+import languageRoutes from './routes/language.js'
+import personalizationRoutes from './routes/personalization.js'
 import visionRoutes from './routes/vision.js'
-import voiceRoutes from './routes/voice.js'
 import dailyLivingRoutes from './routes/dailyLiving.js'
-
-dotenv.config()
+import imageGenerationRoutes from './routes/imageGeneration.js'
+import guidanceRoutes from './routes/guidance.js'
+import speechToTextRoutes from './routes/speechToText.js'
+import textToSpeechRoutes from './routes/textToSpeech.js'
+import galleryRoutes from './routes/gallery.js'
+import musicRoutes from './routes/music.js'
+import { errorHandler } from './middleware/errorHandler.js'
 
 const app = express()
-const PORT = process.env.PORT || 8080
 
-// Middleware
 app.use(cors())
 app.use(express.json({ limit: '10mb' }))
 app.use(express.urlencoded({ extended: true, limit: '10mb' }))
 
-// Health check
-app.get('/health', (req, res) => {
-  res.json({ status: 'ok', timestamp: new Date().toISOString() })
+// Increase timeout for long-running requests (like image generation)
+app.use((req, res, next) => {
+  req.setTimeout(150000) // 150 seconds
+  res.setTimeout(150000) // 150 seconds
+  next()
 })
 
-// API routes
 app.use('/api/conversation', conversationRoutes)
+app.use('/api/feedback', feedbackRoutes)
+app.use('/api/progress', progressRoutes)
+app.use('/api/language', languageRoutes)
+app.use('/api/personalization', personalizationRoutes)
 app.use('/api/vision', visionRoutes)
-app.use('/api/voice', voiceRoutes)
 app.use('/api/daily-living', dailyLivingRoutes)
+app.use('/api/image-generation', imageGenerationRoutes)
+app.use('/api/guidance', guidanceRoutes)
+app.use('/api/speech-to-text', speechToTextRoutes)
+app.use('/api/text-to-speech', textToSpeechRoutes)
+app.use('/api/gallery', galleryRoutes)
+app.use('/api/music', musicRoutes)
 
-// Error handling middleware
-app.use((err: Error, req: express.Request, res: express.Response, next: express.NextFunction) => {
-  console.error('Error:', err)
-  const statusCode = (err as any).statusCode || 500
-  res.status(statusCode).json({ 
-    error: 'Internal server error', 
-    message: err.message,
-    ...(process.env.NODE_ENV === 'development' && { stack: err.stack })
-  })
+app.get('/health', (req, res) => {
+  res.json({ status: 'ok', service: 'voicecompanion-backend' })
 })
 
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`)
-  console.log(`Environment: ${process.env.NODE_ENV || 'development'}`)
-})
+app.use(errorHandler)
 
-export default app
+app.listen(config.port, '0.0.0.0', () => {
+  console.log(`VoiceCompanion backend server running on port ${config.port}`)
+})
 

@@ -1,132 +1,177 @@
-# VoiceLens - Project Summary
+# VoiceCompanion - Unified Project Summary
 
 ## Overview
 
-**VoiceLens** is an intelligent, voice-driven accessibility assistant that helps users with visual impairments navigate daily life through natural conversation. It combines real-time visual understanding with practical daily living support.
+**VoiceCompanion** is a unified intelligent voice assistant that combines the best of both VoiceLens (accessibility assistant) and VoiceBuddy (language learning companion) into a single, powerful platform.
 
-## Problem Statement
+## Project Name: VoiceCompanion
 
-People with visual impairments face daily challenges:
-- Reading documents, labels, and signs
-- Identifying products while shopping
-- Navigating unfamiliar environments
-- Managing daily tasks independently
-- Accessing visual information
+The name "VoiceCompanion" was chosen because:
+- **Voice**: Represents the voice-driven nature of both use cases
+- **Companion**: Emphasizes the supportive, helpful role in both accessibility and learning contexts
+- **Unified**: Suggests a single platform that serves multiple purposes
 
-## Solution
+## What Was Merged
 
-A fully voice-driven companion that:
-- **Sees** through the camera and describes what's there
-- **Reads** text from documents, labels, and signs
-- **Understands** context and provides helpful responses
-- **Speaks** naturally using ElevenLabs' lifelike voice
-- **Assists** with shopping, navigation, and daily tasks
+### From VoiceLens (Accessibility Assistant)
+- ✅ Camera-based visual assistance
+- ✅ Document reading capabilities
+- ✅ Scene description using Vision API
+- ✅ Shopping assistance
+- ✅ Navigation help
+- ✅ Task management
+- ✅ Daily living support features
+
+### From VoiceBuddy (Language Learning)
+- ✅ Conversation practice system
+- ✅ Grammar/vocabulary/pronunciation feedback
+- ✅ Cultural context explanations
+- ✅ Scenario-based learning
+- ✅ Progress tracking
+- ✅ Personalized learning recommendations
+
+## Unified Architecture
+
+```
+VoiceCompanion
+├── Accessibility Mode
+│   ├── Camera Integration
+│   ├── Vision API (text extraction, object detection)
+│   ├── Document Reading
+│   ├── Shopping Assistance
+│   └── Navigation Help
+│
+└── Learning Mode
+    ├── Scenario Selection
+    ├── Conversation Practice
+    ├── Language Feedback
+    ├── Progress Tracking
+    └── Personalization
+```
 
 ## Key Features
 
-### 1. Natural Voice Interaction
-- Entirely voice-driven interface
-- ElevenLabs for human-like voice synthesis
-- Web Speech API for speech recognition
-- No visual interface required
+### Dual Mode System
+- **Mode Switcher**: Easy toggle between Accessibility and Learning modes
+- **Unified Interface**: Consistent UI/UX across both modes
+- **Shared Services**: Common backend services for both modes
 
-### 2. Visual Assistance
-- Real-time camera integration
-- Scene description using Gemini Vision
-- Text extraction with Google Cloud Vision API
-- Object detection and identification
+### Backend Services Merged
+- `visionService.ts` - Image analysis and text extraction
+- `geminiService.ts` - Enhanced with multimodal support
+- `elevenLabsService.ts` - Voice synthesis for both modes
+- `feedbackService.ts` - Language learning feedback
+- `progressService.ts` - Learning progress tracking
+- `personalizationService.ts` - Adaptive learning
 
-### 3. Daily Living Support
-- **Document Reading**: Read letters, bills, recipes, instructions
-- **Shopping Assistance**: Identify products, read labels, compare items
-- **Navigation Help**: Voice-guided directions and location descriptions
-- **Task Management**: Voice-controlled scheduling and reminders
+### Frontend Components Merged
+- `ModeSelector.tsx` - Switch between modes
+- `VoiceConversation.tsx` - Unified conversation interface
+- `CameraCapture.tsx` - Visual assistance for accessibility mode
+- `ScenarioSelector.tsx` - Learning scenarios
+- `FeedbackPanel.tsx` - Real-time feedback display
+- `ProgressTracker.tsx` - Progress visualization
 
-### 4. Accessibility First
-- High contrast mode
-- Adjustable font sizes
-- Keyboard navigation
-- Screen reader compatible
-- Built for users with visual impairments
+## API Routes
 
-## Technology Stack
+### Unified Routes
+- `/api/conversation` - Handles both modes with mode detection
+- `/api/vision/*` - Visual assistance endpoints
+- `/api/daily-living/*` - Accessibility features
+- `/api/feedback/*` - Language learning feedback
+- `/api/progress/*` - Learning progress
+- `/api/language/*` - Language analysis
+- `/api/personalization/*` - Adaptive learning
 
-### Frontend
-- React + TypeScript
-- Vite for fast development
-- Web Speech API for voice input
-- Camera API for visual input
+## Technical Implementation
 
-### Backend
-- Node.js + Express + TypeScript
-- Google Cloud Run for deployment
+### Mode Detection
+The conversation endpoint automatically detects the mode and:
+- **Accessibility Mode**: Uses multimodal Gemini with images
+- **Learning Mode**: Uses personalized Gemini responses with feedback
 
-### AI & Services
-- **ElevenLabs**: Voice synthesis and speech-to-text
-- **Google Cloud Gemini**: Multimodal AI understanding
-- **Google Cloud Vision API**: Text extraction and object detection
+### Shared Infrastructure
+- Single backend server
+- Unified frontend application
+- Common authentication (if needed)
+- Shared progress tracking
 
-## Architecture Highlights
+## Benefits of Merging
 
-1. **Multimodal AI**: Combines voice and visual inputs for intelligent understanding
-2. **Conversation Memory**: Maintains context across multiple interactions
-3. **Graceful Degradation**: Works even if some services are unavailable
-4. **Cloud-Native**: Scalable architecture on Google Cloud
-5. **Accessible Design**: WCAG compliant, keyboard navigable
+1. **Code Reuse**: Shared services and components
+2. **Unified Experience**: Single app for multiple use cases
+3. **Easier Maintenance**: One codebase to maintain
+4. **Better UX**: Users can switch modes seamlessly
+5. **Resource Efficiency**: Shared infrastructure
 
-## Demo Highlights
+## File Structure
 
-1. **"What do you see?"** - Real-time scene description
-2. **"Read this"** - Document and text reading
-3. **Shopping Assistance** - Product identification and label reading
-4. **Task Management** - Voice-controlled daily tasks
-5. **Navigation** - Voice-guided directions
+```
+AI-Partner/
+├── frontend/
+│   ├── src/
+│   │   ├── components/
+│   │   │   ├── ModeSelector.tsx          # NEW: Mode switcher
+│   │   │   ├── VoiceConversation.tsx      # ENHANCED: Supports both modes
+│   │   │   ├── CameraCapture.tsx          # FROM VoiceLens
+│   │   │   ├── ScenarioSelector.tsx       # FROM VoiceBuddy
+│   │   │   ├── FeedbackPanel.tsx         # FROM VoiceBuddy
+│   │   │   └── ProgressTracker.tsx        # FROM VoiceBuddy
+│   │   ├── hooks/
+│   │   │   ├── useElevenLabsAgent.ts      # ENHANCED: Both modes
+│   │   │   ├── useCamera.ts               # FROM VoiceLens
+│   │   │   └── useLanguageFeedback.ts     # FROM VoiceBuddy
+│   │   └── services/
+│   │       └── api.ts                     # ENHANCED: Both modes
+├── backend/
+│   ├── src/
+│   │   ├── routes/
+│   │   │   ├── conversation.ts           # ENHANCED: Mode-aware
+│   │   │   ├── vision.ts                  # FROM VoiceLens
+│   │   │   ├── dailyLiving.ts             # FROM VoiceLens
+│   │   │   ├── feedback.ts                # FROM VoiceBuddy
+│   │   │   ├── progress.ts                # FROM VoiceBuddy
+│   │   │   ├── language.ts                # FROM VoiceBuddy
+│   │   │   └── personalization.ts         # FROM VoiceBuddy
+│   │   └── services/
+│   │       ├── visionService.ts           # FROM VoiceLens
+│   │       ├── geminiService.ts           # ENHANCED: Multimodal
+│   │       ├── elevenLabsService.ts       # SHARED
+│   │       ├── feedbackService.ts         # FROM VoiceBuddy
+│   │       ├── progressService.ts         # FROM VoiceBuddy
+│   │       └── personalizationService.ts  # FROM VoiceBuddy
+└── README.md                              # UPDATED: Unified docs
+```
 
-## Impact
+## Migration Notes
 
-- **Independence**: Enables users to navigate daily life independently
-- **Accessibility**: Makes visual information accessible through voice
-- **Natural Interaction**: Conversational, not command-based
-- **Practical**: Solves real-world problems users face daily
+### What Changed
+- Project renamed from VoiceBuddy to VoiceCompanion
+- Added mode switcher in UI
+- Enhanced conversation endpoint to handle both modes
+- Merged vision and daily living routes from VoiceLens
+- Added camera capture component
+- Unified configuration
 
-## Technical Innovation
+### What Stayed the Same
+- Core architecture
+- Technology stack
+- API structure (enhanced, not replaced)
+- Component patterns
 
-1. **Multimodal Understanding**: Seamlessly combines voice and visual inputs
-2. **Context-Aware**: Maintains conversation context for natural dialogue
-3. **Real-Time Processing**: Low-latency voice interaction
-4. **Intelligent Responses**: AI-powered understanding and helpful responses
+## Next Steps
 
-## Future Enhancements
-
-- Offline mode for basic features
-- Multi-language support
-- Integration with smart home devices
-- Advanced navigation with GPS
-- Recipe reading and cooking assistance
-- Medication label reading
+1. **Test Both Modes**: Ensure all features work in both modes
+2. **Add Mode Persistence**: Remember user's preferred mode
+3. **Cross-Mode Features**: Consider features that work in both modes
+4. **Enhanced Integration**: Further unify the experience
 
 ## Hackathon Fit
 
-This project perfectly demonstrates:
-- ✅ ElevenLabs integration for natural voice
-- ✅ Google Cloud Vertex AI/Gemini for intelligence
-- ✅ Multimodal AI capabilities
-- ✅ Real-world problem solving
-- ✅ Accessibility and inclusion
-- ✅ Creative use of technology
-
-## Getting Started
-
-See README.md for complete setup instructions.
-
-Quick start:
-```bash
-./setup.sh
-npm run dev:backend  # Terminal 1
-npm run dev:frontend # Terminal 2
-```
-
-## Team & Credits
-
-Built for the ElevenLabs + Google Cloud hackathon challenge.
-
+This unified project perfectly demonstrates:
+- ✅ **ElevenLabs Agents**: Natural conversation in both modes
+- ✅ **Google Cloud Gemini**: Multimodal AI for accessibility + intelligent feedback for learning
+- ✅ **Real-world problems**: Solves both accessibility and language learning challenges
+- ✅ **Creative solution**: Single platform serving multiple use cases
+- ✅ **Technical innovation**: Seamless mode switching with shared infrastructure
+- ✅ **Accessibility**: Built-in accessibility features benefit all users

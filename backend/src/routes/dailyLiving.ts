@@ -4,7 +4,6 @@ import { visionService } from '../services/visionService.js'
 
 const router = express.Router()
 
-// Document reading endpoint
 router.post('/read-document', async (req, res) => {
   try {
     const { imageData } = req.body
@@ -13,10 +12,8 @@ router.post('/read-document', async (req, res) => {
       return res.status(400).json({ error: 'Image data is required' })
     }
 
-    // Extract text using Vision API
     const text = await visionService.extractText(imageData)
 
-    // Use Gemini to format and explain the document
     const explanation = await geminiService.generateResponse(
       `Please read and explain this document clearly. Format it in a way that's easy to understand when read aloud:\n\n${text}`
     )
@@ -34,7 +31,6 @@ router.post('/read-document', async (req, res) => {
   }
 })
 
-// Shopping assistance endpoint
 router.post('/shopping-assist', async (req, res) => {
   try {
     const { imageData, question } = req.body
@@ -43,15 +39,13 @@ router.post('/shopping-assist', async (req, res) => {
       return res.status(400).json({ error: 'Image data is required' })
     }
 
-    // Analyze the image for product information
     const analysis = await visionService.analyzeImage(imageData)
     
-    // Use Gemini to provide shopping assistance
     const prompt = question 
       ? `The user is asking about a product: "${question}". Based on the image analysis, provide helpful shopping assistance.`
       : 'Describe this product in detail, including what it is, any visible text (brand, price, description), and helpful shopping information.'
 
-    const assistance = await geminiService.generateResponse(prompt, imageData)
+    const assistance = await geminiService.generateResponse(prompt)
 
     res.json({
       productInfo: analysis,
@@ -66,7 +60,6 @@ router.post('/shopping-assist', async (req, res) => {
   }
 })
 
-// Navigation helper endpoint
 router.post('/navigation', async (req, res) => {
   try {
     const { query, location } = req.body
@@ -75,7 +68,6 @@ router.post('/navigation', async (req, res) => {
       return res.status(400).json({ error: 'Query is required' })
     }
 
-    // Use Gemini to provide navigation assistance
     const prompt = `The user needs navigation help: "${query}". ${location ? `Their current location context: ${location}` : ''}
 Provide clear, step-by-step directions that are easy to follow when spoken aloud. Be specific about landmarks, turns, and distances.`
 
@@ -93,7 +85,6 @@ Provide clear, step-by-step directions that are easy to follow when spoken aloud
   }
 })
 
-// Task management endpoint
 router.post('/tasks', async (req, res) => {
   try {
     const { action, task, tasks } = req.body
@@ -102,7 +93,6 @@ router.post('/tasks', async (req, res) => {
       return res.status(400).json({ error: 'Action is required' })
     }
 
-    // Use Gemini to help with task management
     let prompt = ''
     switch (action) {
       case 'add':

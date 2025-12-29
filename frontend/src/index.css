@@ -1,79 +1,57 @@
+/* Global styles */
 * {
-  margin: 0;
-  padding: 0;
   box-sizing: border-box;
 }
 
-:root {
-  --bg-primary: #1a1a1a;
-  --bg-secondary: #2d2d2d;
-  --text-primary: #ffffff;
-  --text-secondary: #b0b0b0;
-  --accent: #4a9eff;
-  --accent-hover: #6bb0ff;
-  --border: #404040;
-  --success: #4caf50;
-  --error: #f44336;
-  --warning: #ff9800;
+/* Override any full-width button styles */
+button.conversation-button,
+.conversation-button {
+  width: auto !important;
+  max-width: 400px !important;
 }
 
-body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  background-color: var(--bg-primary);
-  color: var(--text-primary);
-  min-height: 100vh;
+/* Global image constraints */
+img {
+  max-width: 100%;
+  height: auto;
+  display: block;
 }
 
-#root {
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
+/* Constrain generated images and large content */
+.generated-image,
+.image-preview,
+.image-result,
+.result-image,
+.generated-image-container {
+  max-width: 600px;
+  width: 100%;
+  height: auto;
+  margin: 0 auto;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  display: block;
 }
 
-button {
-  font-family: inherit;
-  cursor: pointer;
-  border: none;
-  outline: none;
-  transition: all 0.2s ease;
+/* Improve overall layout constraints */
+.container,
+.content-wrapper {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 1rem;
+  box-sizing: border-box;
 }
 
-button:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 2px;
+/* Ensure cards and panels don't overflow */
+.card,
+.panel {
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
-input, textarea {
-  font-family: inherit;
-  outline: none;
+/* Constrain form inputs and text areas */
+input[type="text"],
+input[type="email"],
+textarea {
+  max-width: 100%;
+  box-sizing: border-box;
 }
-
-input:focus, textarea:focus {
-  outline: 2px solid var(--accent);
-  outline-offset: 2px;
-}
-
-/* High contrast mode support */
-@media (prefers-contrast: high) {
-  :root {
-    --bg-primary: #000000;
-    --bg-secondary: #1a1a1a;
-    --text-primary: #ffffff;
-    --text-secondary: #ffffff;
-    --border: #ffffff;
-  }
-}
-
-/* Reduced motion support */
-@media (prefers-reduced-motion: reduce) {
-  * {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-  }
-}
-

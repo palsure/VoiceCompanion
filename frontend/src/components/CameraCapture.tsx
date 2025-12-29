@@ -6,9 +6,10 @@ interface CameraCaptureProps {
   active: boolean
   onToggle: (active: boolean) => void
   onImageCapture?: (imageData: string | null) => void
+  onOpenGallery?: () => void
 }
 
-const CameraCapture = ({ active, onToggle, onImageCapture }: CameraCaptureProps) => {
+const CameraCapture = ({ active, onToggle, onImageCapture, onOpenGallery }: CameraCaptureProps) => {
   const { videoRef, isActive, error, startCamera, stopCamera, captureImage } = useCamera()
 
   useEffect(() => {
@@ -30,9 +31,41 @@ const CameraCapture = ({ active, onToggle, onImageCapture }: CameraCaptureProps)
     }
   }
 
+  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (file && onImageCapture) {
+      const reader = new FileReader()
+      reader.onloadend = () => {
+        const base64String = reader.result as string
+        onImageCapture(base64String)
+      }
+      reader.readAsDataURL(file)
+    }
+  }
+
   return (
     <div className="camera-capture">
       <div className="camera-controls">
+        {onOpenGallery && (
+          <button
+            className="gallery-button"
+            onClick={onOpenGallery}
+            aria-label="Open from gallery"
+          >
+            🖼️ Open from Gallery
+          </button>
+        )}
+
+        <label className="upload-button">
+          📁 Upload Image
+          <input
+            type="file"
+            accept="image/*"
+            onChange={handleFileUpload}
+            style={{ display: 'none' }}
+          />
+        </label>
+
         <button
           className="camera-toggle"
           onClick={() => {
@@ -46,17 +79,19 @@ const CameraCapture = ({ active, onToggle, onImageCapture }: CameraCaptureProps)
         >
           {isActive ? '📷 Stop Camera' : '📷 Start Camera'}
         </button>
-        
-        {isActive && (
+      </div>
+      
+      {isActive && (
+        <div className="capture-control">
           <button
             className="capture-button"
             onClick={handleCapture}
             aria-label="Capture image"
           >
-            📸 Capture
+            📸 Capture Image
           </button>
-        )}
-      </div>
+        </div>
+      )}
 
       {error && (
         <div className="camera-error" role="alert">
@@ -64,8 +99,8 @@ const CameraCapture = ({ active, onToggle, onImageCapture }: CameraCaptureProps)
         </div>
       )}
 
-      <div className="camera-preview">
-        {isActive ? (
+      {isActive && (
+        <div className="camera-preview">
           <video
             ref={videoRef}
             autoPlay
@@ -74,13 +109,8 @@ const CameraCapture = ({ active, onToggle, onImageCapture }: CameraCaptureProps)
             className="camera-video"
             aria-label="Camera preview"
           />
-        ) : (
-          <div className="camera-placeholder">
-            <p>Camera is off</p>
-            <p className="placeholder-hint">Enable camera to capture images for visual assistance</p>
-          </div>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   )
 }
