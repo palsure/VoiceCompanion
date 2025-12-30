@@ -162,30 +162,15 @@ Provide:
       throw new Error('Gemini API not configured')
     }
 
-    const prompt = `You are telling a story about this image to someone who cannot see it. Describe the scene as if you're narrating a story, not listing objects.
+    const prompt = `Tell a vivid story about this image in approximately 100 words.
 
-Write a vivid, narrative description that flows like a story. Start by setting the scene, then describe what unfolds in the image. Use descriptive language that paints a picture with words.
+Describe:
+- The scene with specific, unique details
+- Depth (foreground to background)
+- Colors, lighting, and mood
+- What makes this image special
 
-Guidelines:
-- Begin with the overall scene and setting (where and when)
-- Describe the scene as if telling a story, with a natural flow
-- Use vivid, sensory language (colors, lighting, atmosphere, mood)
-- Connect elements together in a narrative way, not as separate items
-- Describe what's happening or what the scene conveys
-- End with the overall feeling or impression the image creates
-
-DO NOT:
-- List objects like "Scene contains: X, Y, Z"
-- Use bullet points or fragmented sentences
-- Just enumerate what's in the image
-
-DO:
-- Write in flowing, complete sentences
-- Tell a story about what you see
-- Create a vivid mental picture through narrative description
-- Make it engaging and descriptive, like reading a passage from a book
-
-Example style: "In the golden light of a mountain sunrise, a vast autumn forest stretches across the landscape. Snow-capped peaks rise majestically in the distance, their dark grey silhouettes contrasting with the brilliant blue sky above. The forest below is a tapestry of autumn colors - golden yellows and vibrant oranges dominate, while a striking section of deep red foliage creates a dramatic accent on the right. Two light-barked trees stand prominently in the foreground, their golden leaves catching the warm sunlight. Large dark boulders dot the grassy foreground, and fallen leaves in shades of yellow and orange carpet the ground. The powerful sunburst from the upper left casts a warm, golden glow that illuminates the entire scene, creating a sense of depth and tranquility. This is a breathtaking moment of natural beauty, capturing the essence of autumn in a mountain landscape."`
+Write as flowing narrative prose, not a list. Be specific about what you see. Around 100 words.`
 
     try {
       const imagePart = {
