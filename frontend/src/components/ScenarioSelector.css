@@ -7,40 +7,211 @@
   box-sizing: border-box;
 }
 
-.scenario-selector h2 {
-  margin-bottom: 1.5rem;
+.scenario-selector h3 {
+  margin: 0 0 1rem 0;
   color: #333;
-  font-size: 1.5rem;
-}
-
-.scenarios-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-  gap: 1rem;
-}
-
-.scenario-card {
+  font-size: 1.1rem;
+  font-weight: 600;
   display: flex;
-  flex-direction: column;
   align-items: center;
   gap: 0.5rem;
-  padding: 1.5rem 1rem;
+}
+
+/* Language Section */
+.language-section {
+  margin-bottom: 1.5rem;
+  position: relative;
+}
+
+.language-dropdown-trigger {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem 1.25rem;
+  background: #f8f9fa;
   border: 2px solid #e0e0e0;
   border-radius: 12px;
-  background: white;
+  color: #333;
+  font-size: 1rem;
   cursor: pointer;
   transition: all 0.3s ease;
 }
 
-.scenario-card:hover {
+.language-dropdown-trigger:hover {
+  background: #f0f0f0;
+  border-color: #667eea;
+}
+
+.lang-flag {
+  font-size: 1.5rem;
+}
+
+.lang-name {
+  font-weight: 600;
+  flex: 1;
+  text-align: left;
+  color: #333;
+}
+
+.lang-native {
+  color: #666;
+  font-size: 0.9rem;
+}
+
+.dropdown-arrow {
+  font-size: 0.8rem;
+  color: #666;
+}
+
+.language-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: white;
+  border: 2px solid #e0e0e0;
+  border-radius: 12px;
+  margin-top: 0.5rem;
+  max-height: 300px;
+  overflow-y: auto;
+  z-index: 100;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+}
+
+.language-option {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.875rem 1.25rem;
+  background: transparent;
+  border: none;
+  color: #333;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: left;
+}
+
+.language-option:hover {
+  background: rgba(102, 126, 234, 0.1);
+}
+
+.language-option.selected {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+}
+
+.language-option.selected .lang-native {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.language-option .lang-native {
+  margin-left: auto;
+  color: #888;
+}
+
+/* Difficulty Section */
+.difficulty-section {
+  margin-bottom: 1.5rem;
+}
+
+.difficulty-buttons {
+  display: flex;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.difficulty-btn {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 1rem 0.5rem;
+  background: #f8f9fa;
+  border: 2px solid #e0e0e0;
+  border-radius: 12px;
+  color: #333;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.difficulty-btn:hover {
+  background: #f0f0f0;
   border-color: #667eea;
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
+}
+
+.difficulty-btn.selected {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-color: transparent;
+  color: white;
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+}
+
+.diff-icon {
+  font-size: 1.5rem;
+}
+
+.diff-name {
+  font-weight: 600;
+}
+
+.difficulty-description {
+  margin: 0;
+  padding: 0.75rem 1rem;
+  background: #f8f9fa;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  color: #666;
+  text-align: center;
+}
+
+/* Scenarios Section */
+.scenarios-section {
+  margin-bottom: 1rem;
+}
+
+.scenarios-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 0.75rem;
+}
+
+.scenario-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 1.25rem 0.75rem;
+  background: #f8f9fa;
+  border: 2px solid #e0e0e0;
+  border-radius: 14px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  min-height: 90px;
+}
+
+.scenario-card:hover {
+  background: #f0f0f0;
+  border-color: #667eea;
+  transform: translateY(-3px);
+  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.2);
 }
 
 .scenario-card.selected {
+  background: linear-gradient(135deg, rgba(102, 126, 234, 0.15) 0%, rgba(118, 75, 162, 0.15) 100%);
   border-color: #667eea;
-  background: linear-gradient(135deg, #667eea15 0%, #764ba215 100%);
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.2);
+}
+
+.scenario-card.expanded {
+  grid-column: span 2;
+  padding-bottom: 1rem;
 }
 
 .scenario-icon {
@@ -48,9 +219,100 @@
 }
 
 .scenario-name {
-  font-size: 0.9rem;
-  font-weight: 500;
+  font-size: 0.85rem;
+  font-weight: 600;
   color: #333;
   text-align: center;
+  line-height: 1.3;
 }
 
+.scenario-details {
+  width: 100%;
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid #e0e0e0;
+  text-align: left;
+}
+
+.scenario-description {
+  margin: 0 0 0.75rem 0;
+  font-size: 0.8rem;
+  color: #666;
+  line-height: 1.4;
+}
+
+.scenario-objectives {
+  font-size: 0.75rem;
+}
+
+.scenario-objectives strong {
+  color: #667eea;
+  display: block;
+  margin-bottom: 0.25rem;
+}
+
+.scenario-objectives ul {
+  margin: 0;
+  padding-left: 1.25rem;
+  color: #666;
+}
+
+.scenario-objectives li {
+  margin-bottom: 0.15rem;
+}
+
+/* Selection Summary */
+.selection-summary {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem 1.25rem;
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(5, 150, 105, 0.1) 100%);
+  border: 2px solid rgba(16, 185, 129, 0.3);
+  border-radius: 12px;
+  margin-top: 1rem;
+  font-size: 0.9rem;
+  color: #333;
+}
+
+.summary-icon {
+  font-size: 1.25rem;
+}
+
+.selection-summary strong {
+  color: #059669;
+}
+
+/* Scrollbar styling */
+.language-dropdown::-webkit-scrollbar {
+  width: 6px;
+}
+
+.language-dropdown::-webkit-scrollbar-track {
+  background: #f0f0f0;
+  border-radius: 3px;
+}
+
+.language-dropdown::-webkit-scrollbar-thumb {
+  background: #ccc;
+  border-radius: 3px;
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+  .scenario-selector {
+    padding: 1.5rem;
+  }
+
+  .difficulty-buttons {
+    flex-direction: column;
+  }
+
+  .scenarios-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .scenario-card.expanded {
+    grid-column: span 2;
+  }
+}

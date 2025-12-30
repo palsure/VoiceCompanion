@@ -8,11 +8,9 @@ class GeminiService {
   constructor() {
     if (config.geminiApiKey) {
       this.genAI = new GoogleGenerativeAI(config.geminiApiKey)
-      try {
-        this.model = this.genAI.getGenerativeModel({ model: 'gemini-pro' })
-      } catch {
-        this.model = this.genAI.getGenerativeModel({ model: 'gemini-pro' })
-      }
+      // Use gemini-2.5-flash - the latest available model with vision support
+      this.model = this.genAI.getGenerativeModel({ model: 'gemini-2.5-flash' })
+      console.log('✅ Gemini service initialized with gemini-2.5-flash')
     }
   }
 

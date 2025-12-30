@@ -14,13 +14,16 @@ services:
       - ELEVENLABS_API_KEY=${ELEVENLABS_API_KEY:-}
       - GEMINI_API_KEY=${GEMINI_API_KEY:-}
       - GOOGLE_CLOUD_PROJECT_ID=${GOOGLE_CLOUD_PROJECT_ID:-}
-      - GOOGLE_APPLICATION_CREDENTIALS=/root/.config/gcloud/application_default_credentials.json
+      # Use service account key file if available, otherwise fall back to ADC
+      - GOOGLE_APPLICATION_CREDENTIALS=${GOOGLE_APPLICATION_CREDENTIALS:-/app/key.json}
       - VERTEX_AI_LOCATION=${VERTEX_AI_LOCATION:-us-central1}
     volumes:
       - ./backend/src:/app/src
       - ./backend/package.json:/app/package.json
       - ./backend/tsconfig.json:/app/tsconfig.json
-      # Mount Application Default Credentials
+      # Mount service account key file (create key.json in project root)
+      - ./key.json:/app/key.json:ro
+      # Mount Application Default Credentials (if available)
       - ${HOME}/.config/gcloud:/root/.config/gcloud:ro
       - /app/node_modules
     restart: unless-stopped

@@ -50,8 +50,13 @@ const ImageToVoice = () => {
       const imageDescription = result.description || 'Unable to describe image'
       setDescription(imageDescription)
 
-      // Generate and play voice
-      await handleGenerateVoice(imageDescription)
+      // Try to generate and play voice (but don't fail if quota exceeded)
+      try {
+        await handleGenerateVoice(imageDescription)
+      } catch (voiceError: any) {
+        console.warn('Voice generation failed (quota may be exceeded):', voiceError)
+        // Don't show alert - just show the text description
+      }
     } catch (error: any) {
       console.error('Image analysis error:', error)
       setDescription('Failed to analyze image. Please try again.')
@@ -90,7 +95,7 @@ const ImageToVoice = () => {
       await audio.play()
     } catch (error: any) {
       console.error('Voice generation error:', error)
-      alert('Failed to generate voice. Please try again.')
+      alert('Voice generation unavailable. Your ElevenLabs quota may be exceeded. The text description is shown above.')
     }
   }
 
