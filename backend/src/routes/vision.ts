@@ -12,18 +12,25 @@ router.post('/analyze', async (req, res) => {
       return res.status(400).json({ error: 'Image data is required' })
     }
 
-    // Use Google Vision API for comprehensive image analysis
-    const analysis = await visionService.analyzeImage(imageData)
-    
-    // Generate a natural, descriptive scene description using Gemini
+    // Try Gemini FIRST for image description (works without Vision API)
     let description: string
+    let analysis: any = {}
+
     try {
-      // Use Gemini to generate a natural scene description from the image
+      console.log('Using Gemini to describe image...')
       description = await geminiService.describeScene(imageData)
+      console.log('Gemini description successful')
     } catch (geminiError: any) {
-      console.warn('Gemini scene description failed, falling back to Vision API description:', geminiError.message)
-      // Fallback to Vision API description if Gemini fails
-      description = visionService.generateDescription(analysis)
+      console.error('Gemini scene description failed:', geminiError.message)
+      description = 'Failed to describe image. Please check your Gemini API key configuration.'
+    }
+
+    // Optionally try Vision API for additional analysis (may fail if not enabled)
+    try {
+      analysis = await visionService.analyzeImage(imageData)
+    } catch (visionError: any) {
+      console.warn('Vision API not available:', visionError.message)
+      // Continue without Vision API data - Gemini description is the priority
     }
 
     res.json({

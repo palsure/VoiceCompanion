@@ -18,6 +18,8 @@ type Page = 'home' | 'accessibility' | 'learning' | 'voice-to-art' | 'image-to-v
 function App() {
   const [currentPage, setCurrentPage] = useState<Page>('home')
   const [selectedScenario, setSelectedScenario] = useState<string | null>(null)
+  const [selectedLanguage, setSelectedLanguage] = useState<string>('spanish')
+  const [selectedDifficulty, setSelectedDifficulty] = useState<string>('beginner')
   const [currentFeedback, setCurrentFeedback] = useState<any>(null)
   const [cameraActive, setCameraActive] = useState(false)
   const [capturedImage, setCapturedImage] = useState<string | null>(null)
@@ -86,16 +88,22 @@ function App() {
               <ScenarioSelector
                 selectedScenario={selectedScenario}
                 onSelectScenario={setSelectedScenario}
+                selectedLanguage={selectedLanguage}
+                onSelectLanguage={setSelectedLanguage}
+                selectedDifficulty={selectedDifficulty}
+                onSelectDifficulty={setSelectedDifficulty}
               />
               <VoiceConversation
                 scenario={selectedScenario}
                 onFeedback={setCurrentFeedback}
                 mode="learning"
+                targetLanguage={selectedLanguage}
+                difficulty={selectedDifficulty}
               />
             </div>
 
             <div className="right-panel">
-              <FeedbackPanel feedback={currentFeedback} />
+              <FeedbackPanel feedback={currentFeedback} targetLanguage={selectedLanguage} />
               <ProgressTracker />
             </div>
           </div>
