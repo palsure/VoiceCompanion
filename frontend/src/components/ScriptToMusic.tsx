@@ -1,6 +1,16 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { musicApi, speechToTextApi } from '../services/api'
+import FeatureInfoIcon from './FeatureInfoIcon'
 import './ScriptToMusic.css'
+
+interface SavedMusic {
+  id: string
+  script: string
+  style: string
+  length: number
+  audioUrl: string
+  createdAt: number
+}
 
 const MUSIC_STYLES = [
   { id: 'acoustic', label: 'Acoustic', description: 'Gentle, organic sounds' },
@@ -21,20 +31,93 @@ Chorus:
 Music fills the air
 With melodies so fair
 Every note tells a story
+Of love, hope, and glory
+
+Verse 2:
+Through the ups and downs we go
+Music helps our spirits grow
+In harmony we find our way
+To face another day
+
+Chorus:
+Music fills the air
+With melodies so fair
+Every note tells a story
+Of love, hope, and glory
+
+Bridge:
+When words are not enough
+Music speaks from the heart
+It connects us all together
+A universal art
+
+Chorus:
+Music fills the air
+With melodies so fair
+Every note tells a story
 Of love, hope, and glory`
 
 const ScriptToMusic = () => {
   const [script, setScript] = useState(DEFAULT_LYRICS)
   const [loading, setLoading] = useState(false)
   const [generatedMusicUrl, setGeneratedMusicUrl] = useState<string | null>(null)
+  const [generatedMusicBlob, setGeneratedMusicBlob] = useState<Blob | null>(null)
   const [isRecording, setIsRecording] = useState(false)
   const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [musicLength, setMusicLength] = useState(30) // 30 seconds default
   const [musicStyle, setMusicStyle] = useState('acoustic')
   const [isPlaying, setIsPlaying] = useState(false)
+  const [activeTab, setActiveTab] = useState<'create' | 'music'>('create')
+  const [savedMusic, setSavedMusic] = useState<SavedMusic[]>([])
+  const [playingMusicId, setPlayingMusicId] = useState<string | null>(null)
   const audioRef = useRef<HTMLAudioElement | null>(null)
   const audioChunksRef = useRef<Blob[]>([])
+  const isInitialMountRef = useRef(true)
+
+  // Load saved music from localStorage on mount
+  useEffect(() => {
+    const loadMusic = async () => {
+      try {
+        const saved = localStorage.getItem('voiceCompanion_savedMusic')
+        if (saved) {
+          const parsed = JSON.parse(saved)
+          const musicArray = Array.isArray(parsed) ? parsed : []
+          
+          // Data URLs are already stored correctly, no conversion needed
+          setSavedMusic(musicArray)
+        }
+      } catch (err) {
+        console.error('Failed to load saved music:', err)
+      }
+    }
+    
+    loadMusic()
+    isInitialMountRef.current = false
+  }, [])
+
+  // Save music to localStorage whenever savedMusic changes
+  useEffect(() => {
+    if (isInitialMountRef.current) {
+      return
+    }
+    
+    const saveMusic = async () => {
+      try {
+        if (savedMusic.length === 0) {
+          localStorage.removeItem('voiceCompanion_savedMusic')
+          return
+        }
+        
+        // Music is already stored as data URLs, so we can save directly
+        localStorage.setItem('voiceCompanion_savedMusic', JSON.stringify(savedMusic))
+      } catch (err: any) {
+        console.error('Failed to save music to localStorage:', err)
+      }
+    }
+    
+    saveMusic()
+  }, [savedMusic])
 
   const handleClearText = () => {
     setScript('')
@@ -169,7 +252,8 @@ const ScriptToMusic = () => {
 
     // Enhance prompt with style information
     const styleDescription = MUSIC_STYLES.find(s => s.id === musicStyle)?.label || musicStyle
-    const enhancedPrompt = `${script.trim()}\n\nStyle: ${styleDescription}`
+    const styleInfo = MUSIC_STYLES.find(s => s.id === musicStyle)
+    const enhancedPrompt = `${script.trim()}\n\nStyle: ${styleDescription}${styleInfo ? ` (${styleInfo.description})` : ''}`
 
     try {
       const musicBlob = await musicApi.generate(enhancedPrompt, {
@@ -184,6 +268,7 @@ const ScriptToMusic = () => {
       // Create object URL for audio playback
       const musicUrl = URL.createObjectURL(musicBlob)
       setGeneratedMusicUrl(musicUrl)
+      setGeneratedMusicBlob(musicBlob)
     } catch (err: any) {
       console.error('Music generation error:', err)
       setError(err.message || 'Failed to generate music. Please try again.')
@@ -216,6 +301,10 @@ const ScriptToMusic = () => {
           setError('Failed to play music')
           audioRef.current = null
         }
+
+        audio.onpause = () => {
+          setIsPlaying(false)
+        }
       }
 
       audioRef.current.play()
@@ -234,17 +323,151 @@ const ScriptToMusic = () => {
     document.body.removeChild(link)
   }
 
+  const handleSaveMusic = async () => {
+    if (!generatedMusicUrl || !generatedMusicBlob) {
+      setError('No music to save')
+      return
+    }
+
+    try {
+      // Convert blob to data URL for storage
+      const dataUrl = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader()
+        reader.onloadend = () => resolve(reader.result as string)
+        reader.onerror = reject
+        reader.readAsDataURL(generatedMusicBlob)
+      })
+
+      const musicId = `music_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+      const newMusic: SavedMusic = {
+        id: musicId,
+        script: script.trim(),
+        style: musicStyle,
+        length: musicLength,
+        audioUrl: dataUrl,
+        createdAt: Date.now(),
+      }
+
+      setSavedMusic((prev) => [newMusic, ...prev])
+      setError(null)
+      
+      // Show success message (you could add a toast notification here)
+      alert('Music saved successfully!')
+    } catch (err: any) {
+      console.error('Failed to save music:', err)
+      setError('Failed to save music: ' + (err.message || 'Unknown error'))
+    }
+  }
+
+  const handlePlaySavedMusic = (music: SavedMusic) => {
+    if (playingMusicId === music.id && audioRef.current && !audioRef.current.paused) {
+      // Pause if playing
+      audioRef.current.pause()
+      setPlayingMusicId(null)
+    } else {
+      // Stop any currently playing audio
+      if (audioRef.current) {
+        audioRef.current.pause()
+        audioRef.current = null
+      }
+
+      // Play new music
+      const audio = new Audio(music.audioUrl)
+      audio.volume = 1.0
+      audioRef.current = audio
+
+      audio.onended = () => {
+        setPlayingMusicId(null)
+        audioRef.current = null
+      }
+
+      audio.onerror = () => {
+        setPlayingMusicId(null)
+        setError('Failed to play music')
+        audioRef.current = null
+      }
+
+      audio.play()
+      setPlayingMusicId(music.id)
+    }
+  }
+
+  const handleDeleteMusic = (musicId: string) => {
+    if (window.confirm('Are you sure you want to delete this music?')) {
+      setSavedMusic((prev) => prev.filter((m) => m.id !== musicId))
+      
+      // Stop playing if this music was playing
+      if (playingMusicId === musicId && audioRef.current) {
+        audioRef.current.pause()
+        audioRef.current = null
+        setPlayingMusicId(null)
+      }
+    }
+  }
+
+  const handleDownloadSavedMusic = (music: SavedMusic) => {
+    const link = document.createElement('a')
+    link.href = music.audioUrl
+    link.download = `music-${music.id}.mp3`
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+  }
+
   return (
     <div className="script-to-music">
       <div className="section-header">
         <div className="header-content">
           <div className="header-icon">🎵</div>
           <div className="header-text">
-            <h1 className="header-title">Script to Music</h1>
+            <div className="header-title-row">
+              <h1 className="header-title">Script to Music</h1>
+              <FeatureInfoIcon
+                title="Script to Music"
+                description="Transform your lyrics, scripts, or voice recordings into beautiful music compositions. Choose from various music styles and let AI create the perfect soundtrack."
+                howItWorks={[
+                  'Enter your lyrics or script in the text box, or use voice recording',
+                  'Select your preferred music style (Acoustic, Electronic, Classical, Jazz, Rock, or Ambient)',
+                  'Choose the music length (15-60 seconds)',
+                  'Click "Generate Music" - powered by ElevenLabs Music Generation API',
+                  'ElevenLabs creates high-quality instrumental music from your text',
+                  'Listen to your generated music and save it to your collection',
+                  'Access your saved music anytime from the "My Music" tab'
+                ]}
+                features={[
+                  'ElevenLabs Music Generation API for professional-quality compositions',
+                  'Text-to-music conversion using advanced AI models',
+                  'Voice input support for hands-free creation',
+                  'Multiple music styles to choose from',
+                  'Adjustable music length',
+                  'Open-source fallback when premium services are unavailable',
+                  'Save and manage your music library',
+                  'Download your compositions'
+                ]}
+              />
+            </div>
             <p className="header-subtitle">Convert your lyrics or voice into beautiful music</p>
           </div>
         </div>
       </div>
+
+      <div className="tabs-container">
+        <button
+          className={`tab-button ${activeTab === 'create' ? 'active' : ''}`}
+          onClick={() => setActiveTab('create')}
+        >
+          Create Music
+        </button>
+        <button
+          className={`tab-button ${activeTab === 'music' ? 'active' : ''}`}
+          onClick={() => setActiveTab('music')}
+        >
+          My Music ({savedMusic.length})
+        </button>
+      </div>
+
+      {activeTab === 'create' && (
+        <>
 
       <div className="input-section">
         <div className="input-header-row">
@@ -347,16 +570,75 @@ const ScriptToMusic = () => {
               className="play-button"
               onClick={handlePlayMusic}
             >
-              {isPlaying ? '⏸ Pause' : '▶ Play Music'}
+              {isPlaying && audioRef.current && !audioRef.current.paused ? '⏸ Pause' : '▶ Play Music'}
+            </button>
+            <button
+              className="save-button"
+              onClick={handleSaveMusic}
+            >
+              💾 Save Music
             </button>
             <button
               className="download-button"
               onClick={handleDownloadMusic}
             >
-              💾 Download
+              ⬇ Download
             </button>
           </div>
           <audio ref={audioRef} src={generatedMusicUrl} />
+        </div>
+      )}
+        </>
+      )}
+
+      {activeTab === 'music' && (
+        <div className="music-gallery">
+          {savedMusic.length === 0 ? (
+            <div className="empty-gallery">
+              <p>No saved music yet.</p>
+              <p>Create some music and save it to your collection!</p>
+            </div>
+          ) : (
+            <div className="music-list">
+              {savedMusic.map((music) => (
+                <div key={music.id} className="music-item">
+                  <div className="music-item-header">
+                    <h4 className="music-item-title">
+                      {music.script.substring(0, 50)}
+                      {music.script.length > 50 ? '...' : ''}
+                    </h4>
+                    <div className="music-item-meta">
+                      <span className="music-style-badge">{MUSIC_STYLES.find(s => s.id === music.style)?.label || music.style}</span>
+                      <span className="music-length-badge">{Math.floor(music.length / 60)}:{String(music.length % 60).padStart(2, '0')}</span>
+                    </div>
+                  </div>
+                  <div className="music-item-controls">
+                    <button
+                      className="play-button-small"
+                      onClick={() => handlePlaySavedMusic(music)}
+                    >
+                      {playingMusicId === music.id ? '⏸ Pause' : '▶ Play'}
+                    </button>
+                    <button
+                      className="download-button-small"
+                      onClick={() => handleDownloadSavedMusic(music)}
+                    >
+                      ⬇ Download
+                    </button>
+                    <button
+                      className="delete-button-small"
+                      onClick={() => handleDeleteMusic(music.id)}
+                    >
+                      🗑️ Delete
+                    </button>
+                  </div>
+                  <div className="music-item-date">
+                    {new Date(music.createdAt).toLocaleDateString()} {new Date(music.createdAt).toLocaleTimeString()}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       )}
     </div>

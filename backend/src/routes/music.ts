@@ -6,18 +6,11 @@ const router = express.Router()
 
 /**
  * Fallback music generation using simple audio synthesis
- * Creates a basic musical pattern based on the prompt
+ * Creates a basic musical pattern based on the prompt and style
  */
-async function generateMusicFallback(prompt: string, durationSeconds: number): Promise<Buffer> {
+async function generateMusicFallback(prompt: string, durationSeconds: number, style?: string): Promise<Buffer> {
   try {
-    console.log('Using open source fallback music generation for prompt:', prompt.substring(0, 50))
-    
-    // Use a simple approach: generate a basic musical pattern
-    // This creates a simple melody using Web Audio API concepts
-    // For a more sophisticated solution, we could use a library like Tone.js on the client side
-    
-    // For now, we'll use a simple approach with a basic audio file generation
-    // or return a placeholder that indicates fallback was used
+    console.log('Using open source fallback music generation for prompt:', prompt.substring(0, 50), 'style:', style)
     
     // Try alternative Hugging Face models
     const models = [
@@ -56,14 +49,115 @@ async function generateMusicFallback(prompt: string, durationSeconds: number): P
       }
     }
     
-    // If all Hugging Face models fail, generate a simple placeholder audio
-    // This creates a basic sine wave tone as a fallback
-    return generateSimpleTone(durationSeconds)
+    // If all Hugging Face models fail, generate music based on prompt and style
+    return generateMusicFromPrompt(prompt, durationSeconds, style)
   } catch (error: any) {
-    console.error('All fallback methods failed, generating simple tone:', error)
-    // Last resort: generate a simple tone
-    return generateSimpleTone(durationSeconds)
+    console.error('All fallback methods failed, generating music from prompt:', error)
+    // Last resort: generate music from prompt
+    return generateMusicFromPrompt(prompt, durationSeconds, style)
   }
+}
+
+/**
+ * Generate music from prompt and style using audio synthesis
+ * Analyzes the prompt to determine tempo, mood, and scale
+ */
+function generateMusicFromPrompt(prompt: string, durationSeconds: number, style?: string): Buffer {
+  const sampleRate = 44100
+  const numSamples = sampleRate * durationSeconds
+  const buffer = Buffer.allocUnsafe(numSamples * 2)
+  
+  // Analyze prompt to determine musical characteristics
+  const lowerPrompt = prompt.toLowerCase()
+  
+  // Determine tempo based on keywords
+  let notesPerSecond = 2 // Default: moderate tempo
+  if (lowerPrompt.includes('fast') || lowerPrompt.includes('energetic') || lowerPrompt.includes('upbeat') || lowerPrompt.includes('rock')) {
+    notesPerSecond = 4
+  } else if (lowerPrompt.includes('slow') || lowerPrompt.includes('relaxing') || lowerPrompt.includes('calm') || lowerPrompt.includes('ambient')) {
+    notesPerSecond = 1
+  }
+  
+  // Determine scale based on mood
+  let scale: number[]
+  if (lowerPrompt.includes('minor') || lowerPrompt.includes('sad') || lowerPrompt.includes('melancholic') || lowerPrompt.includes('jazz')) {
+    // A minor scale
+    scale = [220.00, 246.94, 261.63, 293.66, 329.63, 349.23, 392.00, 440.00] // A, B, C, D, E, F, G, A
+  } else if (lowerPrompt.includes('classical') || lowerPrompt.includes('orchestral')) {
+    // D major scale
+    scale = [293.66, 329.63, 369.99, 392.00, 440.00, 493.88, 554.37, 587.33] // D, E, F#, G, A, B, C#, D
+  } else {
+    // C major scale (default)
+    scale = [261.63, 293.66, 329.63, 349.23, 392.00, 440.00, 493.88, 523.25] // C, D, E, F, G, A, B, C
+  }
+  
+  // Adjust based on style
+  if (style) {
+    const lowerStyle = style.toLowerCase()
+    if (lowerStyle.includes('rock') || lowerStyle.includes('electronic')) {
+      notesPerSecond = 4
+    } else if (lowerStyle.includes('jazz')) {
+      // Keep jazz tempo moderate
+    } else if (lowerStyle.includes('ambient') || lowerStyle.includes('classical')) {
+      notesPerSecond = 1
+    }
+  }
+  
+  // Generate melody pattern
+  const samplesPerNote = Math.floor(sampleRate / notesPerSecond)
+  const totalNotes = Math.ceil(durationSeconds * notesPerSecond)
+  
+  for (let i = 0; i < numSamples; i++) {
+    const noteIndex = Math.floor(i / samplesPerNote) % totalNotes
+    const scaleIndex = noteIndex % scale.length
+    const baseFreq = scale[scaleIndex]
+    
+    // Create harmony based on style
+    let sample = 0
+    const t = i / sampleRate
+    
+    if (style && style.toLowerCase().includes('rock')) {
+      // Power chord: root + fifth
+      sample = Math.sin(2 * Math.PI * baseFreq * t) * 0.7 + Math.sin(2 * Math.PI * baseFreq * 1.5 * t) * 0.3
+    } else if (style && style.toLowerCase().includes('jazz')) {
+      // Jazz chord: root + third + fifth + seventh
+      sample = Math.sin(2 * Math.PI * baseFreq * t) * 0.4 +
+               Math.sin(2 * Math.PI * baseFreq * 1.25 * t) * 0.2 +
+               Math.sin(2 * Math.PI * baseFreq * 1.5 * t) * 0.2 +
+               Math.sin(2 * Math.PI * baseFreq * 1.75 * t) * 0.2
+    } else if (style && (style.toLowerCase().includes('acoustic') || style.toLowerCase().includes('classical'))) {
+      // Gentle harmony: root + octave
+      sample = Math.sin(2 * Math.PI * baseFreq * t) * 0.6 + Math.sin(2 * Math.PI * baseFreq * 2 * t) * 0.4
+    } else {
+      // Default: root + harmony
+      const harmonyFreq = baseFreq * 0.5 // One octave lower
+      sample = Math.sin(2 * Math.PI * baseFreq * t) * 0.7 + Math.sin(2 * Math.PI * harmonyFreq * t) * 0.3
+    }
+    
+    // Apply ADSR envelope for each note
+    const notePosition = (i % samplesPerNote) / samplesPerNote
+    let envelope = 1.0
+    if (notePosition < 0.1) {
+      // Attack
+      envelope = notePosition / 0.1
+    } else if (notePosition > 0.9) {
+      // Release
+      envelope = (1 - notePosition) / 0.1
+    }
+    
+    // Apply overall fade in/out
+    const globalEnvelope = Math.min(1, Math.min(i / (sampleRate * 0.1), (numSamples - i) / (sampleRate * 0.1)))
+    
+    // Add some variation for more musical interest
+    const variation = Math.sin(2 * Math.PI * 0.5 * t) * 0.1 // Slow vibrato
+    
+    const amplitude = Math.floor((sample + variation) * envelope * globalEnvelope * 12000)
+    
+    // Write as 16-bit little-endian
+    buffer.writeInt16LE(amplitude, i * 2)
+  }
+  
+  return createWavFile(buffer, sampleRate)
 }
 
 /**
@@ -198,16 +292,21 @@ router.post('/generate', async (req, res) => {
       // Fallback to open source music generation
       try {
         const durationSeconds = Math.floor((musicLengthMs || 30000) / 1000)
-        musicBuffer = await generateMusicFallback(prompt, Math.min(durationSeconds, 30)) // Max 30s for free tier
+        // Extract style from prompt if available (handle "Style: Acoustic" or "Style: Acoustic (Gentle, organic sounds)")
+        const styleMatch = prompt.match(/Style:\s*([^\n(]+)/i)
+        const style = styleMatch ? styleMatch[1].trim() : undefined
+        musicBuffer = await generateMusicFallback(prompt, Math.min(durationSeconds, 30), style) // Max 30s for free tier
         usedFallback = true
-        console.log('Music generated successfully using open source fallback')
+        console.log('Music generated successfully using open source fallback with style:', style)
       } catch (fallbackError: any) {
-        console.warn('Fallback music generation failed, using simple tone generator:', fallbackError.message)
-        // Ultimate fallback: generate simple musical tone
+        console.warn('Fallback music generation failed, using prompt-based generator:', fallbackError.message)
+        // Ultimate fallback: generate music from prompt
         const durationSeconds = Math.floor((musicLengthMs || 30000) / 1000)
-        musicBuffer = generateSimpleTone(Math.min(durationSeconds, 30))
+        const styleMatch = prompt.match(/Style:\s*([^\n(]+)/i)
+        const style = styleMatch ? styleMatch[1].trim() : undefined
+        musicBuffer = generateMusicFromPrompt(prompt, Math.min(durationSeconds, 30), style)
         usedFallback = true
-        console.log('Music generated using simple tone fallback')
+        console.log('Music generated using prompt-based fallback with style:', style)
       }
     }
 

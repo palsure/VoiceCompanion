@@ -1,0 +1,39 @@
+steps:
+  # Build backend image
+  - name: gcr.io/cloud-builders/docker
+    args:
+      [
+        "build",
+        "-t",
+        "gcr.io/${PROJECT_ID}/voicecompanion-backend:${BUILD_ID}",
+        "-t",
+        "gcr.io/${PROJECT_ID}/voicecompanion-backend:latest",
+        "-f",
+        "backend/Dockerfile",
+        "backend",
+      ]
+
+  # Build frontend image (Cloud Run nginx config)
+  - name: gcr.io/cloud-builders/docker
+    args:
+      [
+        "build",
+        "-t",
+        "gcr.io/${PROJECT_ID}/voicecompanion-frontend:${BUILD_ID}",
+        "-t",
+        "gcr.io/${PROJECT_ID}/voicecompanion-frontend:latest",
+        "-f",
+        "frontend/Dockerfile.cloudrun",
+        "frontend",
+      ]
+
+# Cloud Build automatically pushes images listed here
+images:
+  - "gcr.io/${PROJECT_ID}/voicecompanion-backend:${BUILD_ID}"
+  - "gcr.io/${PROJECT_ID}/voicecompanion-backend:latest"
+  - "gcr.io/${PROJECT_ID}/voicecompanion-frontend:${BUILD_ID}"
+  - "gcr.io/${PROJECT_ID}/voicecompanion-frontend:latest"
+
+options:
+  machineType: E2_HIGHCPU_8
+

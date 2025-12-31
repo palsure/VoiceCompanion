@@ -1,5 +1,4 @@
-// Using alias path - configured in vite.config.ts
-import { createApiClient, createApiServices } from '@voicecompanion/shared/api'
+import { createApiClient, createApiServices } from './sharedApi'
 
 // Create API client using shared module
 // Vite proxy handles '/api' -> backend
@@ -27,7 +26,7 @@ export const {
 export type {
   ConversationRequest,
   ConversationResponse,
-} from '@voicecompanion/shared/types'
+} from './sharedTypes'
 
 export default api
 

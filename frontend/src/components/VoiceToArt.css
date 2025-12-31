@@ -10,8 +10,8 @@
 
 .voice-to-art-header {
   margin-bottom: 1.5rem;
-  padding-bottom: 1rem;
-  border-bottom: none;
+  padding-bottom: 0.5rem;
+  border-bottom: 3px solid #e0e0e0;
 }
 
 .header-content {
@@ -24,11 +24,18 @@
   flex: 1;
 }
 
+.header-title-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.25rem;
+}
+
 .header-title {
   font-size: 2rem;
   font-weight: 700;
   color: #1a1a1a;
-  margin: 0 0 0.25rem 0;
+  margin: 0;
   background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -38,11 +45,10 @@
 .header-subtitle {
   font-size: 1rem;
   color: #666;
-  margin: 0 0 1rem 0;
+  margin: 0;
   line-height: 1.4;
   font-weight: 400;
-  padding-bottom: 1rem;
-  border-bottom: 3px solid #e0e0e0;
+  padding-bottom: 0.5rem;
 }
 
 .tabs-container {

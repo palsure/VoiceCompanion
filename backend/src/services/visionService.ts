@@ -68,7 +68,14 @@ class VisionService {
 
     try {
       const imageBuffer = this.base64ToBuffer(imageData)
-      const [result] = await this.client.objectLocalization({
+      const objectLocalizationFn = (this.client as any)?.objectLocalization
+      if (typeof objectLocalizationFn !== 'function') {
+        // Some @google-cloud/vision typings / versions don't expose this method cleanly.
+        // Fail soft: object detection is optional in our composite description.
+        return []
+      }
+
+      const [result] = await objectLocalizationFn.call(this.client, {
         image: { content: imageBuffer },
       })
 

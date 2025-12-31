@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
-import { visionApi, textToSpeechApi } from '../services/api'
+import { visionApi, textToSpeechApi, galleryApi } from '../services/api'
 import CameraCapture from './CameraCapture'
+import FeatureInfoIcon from './FeatureInfoIcon'
 import './ImageToVoice.css'
 
 interface SavedArt {
@@ -9,6 +10,10 @@ interface SavedArt {
   prompt: string
   style: string
   createdAt: number
+}
+
+function artSyncKey(a: Pick<SavedArt, 'image' | 'prompt' | 'style'>) {
+  return `${a.style}::${a.prompt}::${a.image.slice(0, 120)}`
 }
 
 const ImageToVoice = () => {
@@ -21,17 +26,61 @@ const ImageToVoice = () => {
   const [savedArts, setSavedArts] = useState<SavedArt[]>([])
   const audioRef = useRef<HTMLAudioElement | null>(null)
 
-  // Load saved arts from localStorage on mount
+  // Load saved arts (prefer backend for cross-platform sync; localStorage as fallback)
   useEffect(() => {
-    try {
-      const saved = localStorage.getItem('voiceCompanion_savedArts')
-      if (saved) {
-        const parsed = JSON.parse(saved)
-        setSavedArts(Array.isArray(parsed) ? parsed : [])
+    const load = async () => {
+      try {
+        // Read local first so we can backfill backend if needed
+        let localArts: SavedArt[] = []
+        try {
+          const saved = localStorage.getItem('voiceCompanion_savedArts')
+          if (saved) {
+            const parsed = JSON.parse(saved)
+            localArts = Array.isArray(parsed) ? parsed : []
+          }
+        } catch {}
+
+        try {
+          const apiResponse = await galleryApi.list()
+          if (apiResponse?.arts) {
+            const apiArts: SavedArt[] = Array.isArray(apiResponse.arts) ? apiResponse.arts : []
+
+            // Merge for immediate UX
+            const seen = new Set<string>()
+            const merged: SavedArt[] = []
+            for (const a of [...apiArts, ...localArts]) {
+              if (!a?.image || !a?.prompt) continue
+              const k = artSyncKey(a)
+              if (seen.has(k)) continue
+              seen.add(k)
+              merged.push(a)
+            }
+            setSavedArts(merged)
+
+            // Backfill backend so mobile can see old web items
+            const apiKeys = new Set(apiArts.map((a) => artSyncKey(a)))
+            const missing = localArts.filter((a) => a?.image && a?.prompt && !apiKeys.has(artSyncKey(a))).slice(0, 25)
+            if (missing.length > 0) {
+              for (const a of missing) {
+                try {
+                  await galleryApi.save(a.image, a.prompt, a.style || 'realistic')
+                } catch (syncErr) {
+                  console.warn('Gallery sync failed for one item:', syncErr)
+                }
+              }
+            }
+            return
+          }
+        } catch (apiError) {
+          console.warn('Gallery API load failed, falling back to localStorage:', apiError)
+        }
+
+        setSavedArts(localArts)
+      } catch (err) {
+        console.error('Failed to load saved arts:', err)
       }
-    } catch (err) {
-      console.error('Failed to load saved arts:', err)
     }
+    load()
   }, [])
 
   const handleImageCapture = (imageData: string | null) => {
@@ -128,7 +177,28 @@ const ImageToVoice = () => {
         <div className="header-content">
           <div className="camera-icon">📸</div>
           <div className="header-text">
-            <h1 className="header-title">Image to Voice</h1>
+            <div className="header-title-row">
+              <h1 className="header-title">Image to Voice</h1>
+              <FeatureInfoIcon
+                title="Image to Voice"
+                description="Transform any image into a detailed, natural language description that is read aloud. Perfect for visually impaired users or anyone who wants to understand images through voice."
+                howItWorks={[
+                  'Capture an image using your camera, upload a file, or select from your saved art gallery',
+                  'The image is analyzed using Google Cloud Vision API and Gemini AI',
+                  'A detailed, story-like description is generated (not just a list of objects)',
+                  'The description is automatically converted to speech using ElevenLabs text-to-speech technology',
+                  'Listen to the natural, human-like voice description or read the text version'
+                ]}
+                features={[
+                  'Camera capture for real-time image analysis',
+                  'File upload support for existing images',
+                  'Gallery integration to use saved artwork',
+                  'Natural, narrative-style descriptions',
+                  'ElevenLabs-powered voice narration with high-quality speech synthesis',
+                  'Accessible for visually impaired users'
+                ]}
+              />
+            </div>
             <p className="header-subtitle">Capture or upload an image to get a detailed voice description</p>
           </div>
         </div>
