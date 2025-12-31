@@ -33,7 +33,8 @@ echo "✅ Backend deployed at: ${BACKEND_URL}"
 echo ""
 
 # Extract hostname from backend URL for nginx Host header
-BACKEND_HOST=$(echo ${BACKEND_URL} | sed 's|https\?://||' | sed 's|/.*||')
+# Use awk for more reliable extraction
+BACKEND_HOST=$(echo "${BACKEND_URL}" | awk -F[/:] '{print $4}')
 echo "📝 Backend hostname: ${BACKEND_HOST}"
 echo ""
 

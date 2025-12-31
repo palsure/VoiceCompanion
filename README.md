@@ -1,5 +1,7 @@
 # VoiceCompanion
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
 **VoiceCompanion** - An intelligent, voice-driven assistant that combines accessibility support for visually impaired users with immersive language learning capabilities and creative AI features. Built with ElevenLabs for natural voice interaction, Google Cloud Gemini for intelligent understanding, and Google Imagen for image generation.
 
 ## Table of Contents

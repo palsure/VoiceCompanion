@@ -48,7 +48,7 @@ export const VoiceModeProvider: React.FC<VoiceModeProviderProps> = ({ children, 
   const isEnabledRef = useRef(false)
   const recognitionRef = useRef<SpeechRecognition | null>(null)
   const isProcessingRef = useRef(false)
-  const restartTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+  const restartTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const previousPageRef = useRef<string | undefined>(undefined)
 
   // Sync ref with state
@@ -346,11 +346,4 @@ export const useVoiceMode = (): VoiceModeContextType => {
     throw new Error('useVoiceMode must be used within a VoiceModeProvider')
   }
   return context
-}
-
-declare global {
-  interface Window {
-    SpeechRecognition: typeof SpeechRecognition
-    webkitSpeechRecognition: typeof SpeechRecognition
-  }
 }

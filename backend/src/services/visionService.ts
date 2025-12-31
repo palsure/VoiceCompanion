@@ -1,7 +1,7 @@
 import { ImageAnnotatorClient } from '@google-cloud/vision'
 import { config } from '../config.js'
 
-class VisionService {
+export class VisionService {
   private client: ImageAnnotatorClient | null = null
 
   constructor() {
