@@ -24,7 +24,7 @@ gcloud run deploy voicecompanion-backend \
   --cpu=2 \
   --timeout=300 \
   --max-instances=10 \
-  --cpu-throttling \
+  --cpu-boost \
   --min-instances=0
 
 # Get backend URL
@@ -32,7 +32,12 @@ BACKEND_URL=$(gcloud run services describe voicecompanion-backend --region=${REG
 echo "✅ Backend deployed at: ${BACKEND_URL}"
 echo ""
 
-# Deploy frontend
+# Extract hostname from backend URL for nginx Host header
+BACKEND_HOST=$(echo ${BACKEND_URL} | sed 's|https\?://||' | sed 's|/.*||')
+echo "📝 Backend hostname: ${BACKEND_HOST}"
+echo ""
+
+# Deploy frontend with both BACKEND_URL and BACKEND_HOST
 echo "2. Deploying frontend..."
 gcloud run deploy voicecompanion-frontend \
   --image=gcr.io/${PROJECT_ID}/voicecompanion-frontend:latest \
@@ -40,17 +45,18 @@ gcloud run deploy voicecompanion-frontend \
   --platform=managed \
   --allow-unauthenticated \
   --port=8080 \
-  --set-env-vars="BACKEND_URL=${BACKEND_URL}" \
+  --set-env-vars="BACKEND_URL=${BACKEND_URL},BACKEND_HOST=${BACKEND_HOST}" \
   --memory=512Mi \
   --cpu=1 \
   --timeout=60 \
-  --max-instances=10
+  --max-instances=10 \
+  --min-instances=0
 
 # Get frontend URL
 FRONTEND_URL=$(gcloud run services describe voicecompanion-frontend --region=${REGION} --format='value(status.url)')
 echo ""
 echo "✅ Frontend deployed at: ${FRONTEND_URL}"
 echo ""
-echo "📝 Note: Update frontend nginx config to proxy to ${BACKEND_URL}/api"
-echo "   Then rebuild and redeploy frontend."
+echo "📝 Frontend nginx is configured to proxy /api requests to: ${BACKEND_URL}/api"
+echo "   Access your application at: ${FRONTEND_URL}"
 

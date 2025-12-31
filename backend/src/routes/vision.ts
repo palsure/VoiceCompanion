@@ -4,6 +4,53 @@ import { geminiService } from '../services/geminiService.js'
 
 const router = express.Router()
 
+/**
+ * @swagger
+ * /api/vision/analyze:
+ *   post:
+ *     summary: Analyze an image and provide description
+ *     tags: [Vision]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - imageData
+ *             properties:
+ *               imageData:
+ *                 type: string
+ *                 description: Base64 encoded image data
+ *                 example: "data:image/jpeg;base64,/9j/4AAQSkZJRg..."
+ *     responses:
+ *       200:
+ *         description: Image analysis successful
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 description:
+ *                   type: string
+ *                   description: AI-generated description of the image
+ *                 labels:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *       400:
+ *         description: Invalid request
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       500:
+ *         description: Server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ */
 router.post('/analyze', async (req, res) => {
   try {
     const { imageData } = req.body
@@ -46,6 +93,40 @@ router.post('/analyze', async (req, res) => {
   }
 })
 
+/**
+ * @swagger
+ * /api/vision/text:
+ *   post:
+ *     summary: Extract text from an image (OCR)
+ *     tags: [Vision]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - imageData
+ *             properties:
+ *               imageData:
+ *                 type: string
+ *                 description: Base64 encoded image data
+ *     responses:
+ *       200:
+ *         description: Text extraction successful
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 text:
+ *                   type: string
+ *                   description: Extracted text from the image
+ *       400:
+ *         description: Invalid request
+ *       500:
+ *         description: Server error
+ */
 router.post('/text', async (req, res) => {
   try {
     const { imageData } = req.body

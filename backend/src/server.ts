@@ -53,8 +53,28 @@ app.use('/api/text-to-speech', textToSpeechRoutes)
 app.use('/api/gallery', galleryRoutes)
 app.use('/api/music', musicRoutes)
 
+/**
+ * @swagger
+ * /health:
+ *   get:
+ *     summary: Health check endpoint
+ *     tags: [Health]
+ *     responses:
+ *       200:
+ *         description: Service is healthy
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/HealthResponse'
+ */
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', service: 'voicecompanion-backend' })
+})
+
+// Setup Swagger documentation
+import { setupSwagger } from './config/swagger.js'
+setupSwagger(app).catch((err) => {
+  console.warn('Swagger setup failed (non-fatal):', err)
 })
 
 app.use(errorHandler)

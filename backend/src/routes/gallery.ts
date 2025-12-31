@@ -63,8 +63,40 @@ async function writeGallery(userId: string, arts: SavedArt[]) {
 }
 
 /**
- * Save art to gallery
- * POST /api/gallery/save
+ * @swagger
+ * /api/gallery/save:
+ *   post:
+ *     summary: Save art to gallery
+ *     tags: [Gallery]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - image
+ *               - prompt
+ *             properties:
+ *               image:
+ *                 type: string
+ *                 description: Base64 encoded image data
+ *               prompt:
+ *                 type: string
+ *                 description: Text prompt used to generate the image
+ *               style:
+ *                 type: string
+ *                 description: Art style (e.g., "realistic", "artistic", "cartoon")
+ *               userId:
+ *                 type: string
+ *                 description: User ID (defaults to "default")
+ *     responses:
+ *       200:
+ *         description: Art saved successfully
+ *       400:
+ *         description: Invalid request
+ *       500:
+ *         description: Server error
  */
 router.post('/save', async (req, res) => {
   try {
@@ -103,8 +135,33 @@ router.post('/save', async (req, res) => {
 })
 
 /**
- * Get all saved arts for a user
- * GET /api/gallery/list?userId=default
+ * @swagger
+ * /api/gallery/list:
+ *   get:
+ *     summary: Get all saved arts for a user
+ *     tags: [Gallery]
+ *     parameters:
+ *       - in: query
+ *         name: userId
+ *         schema:
+ *           type: string
+ *         description: User ID (defaults to "default")
+ *     responses:
+ *       200:
+ *         description: Gallery list retrieved
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 arts:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *       500:
+ *         description: Server error
  */
 router.get('/list', async (req, res) => {
   try {

@@ -1,4 +1,3 @@
-import FeatureInfoIcon from './FeatureInfoIcon'
 import './About.css'
 
 interface AboutProps {
@@ -80,28 +79,6 @@ const About = ({ onNavigate }: AboutProps) => {
           <div className="header-text">
             <div className="header-title-row">
               <h1 className="about-title">About VoiceCompanion</h1>
-              <FeatureInfoIcon
-                title="About VoiceCompanion"
-                description="VoiceCompanion is an intelligent, voice-driven assistant designed to make technology more accessible, especially for visually impaired users, while providing powerful creative tools for everyone."
-                howItWorks={[
-                  'Voice Mode enables complete hands-free navigation using "Hey Companion" wake word',
-                  'All features work seamlessly with voice commands and screen readers',
-                  'AI-powered features use Google Cloud Gemini, Imagen, and Vision APIs',
-                  'ElevenLabs powers all text-to-speech features with natural, human-like voices',
-                  'ElevenLabs Music Generation API creates professional-quality music compositions',
-                  'The "Invisible Interface" allows users to interact without seeing the screen'
-                ]}
-                features={[
-                  'Complete voice navigation system',
-                  'Accessibility-first design',
-                  'ElevenLabs integration for high-quality voice synthesis across all features',
-                  'ElevenLabs Music Generation for Script to Music feature',
-                  'AI-powered creative tools',
-                  'Real-time guidance and assistance',
-                  'Language learning with feedback',
-                  'Multimodal AI capabilities'
-                ]}
-              />
             </div>
             <p className="about-subtitle">An intelligent, voice-driven assistant for accessibility and creativity</p>
           </div>

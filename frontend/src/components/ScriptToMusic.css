@@ -121,8 +121,10 @@
 
 .input-actions {
   display: flex;
+  flex-direction: column;
   gap: 0.5rem;
-  align-items: center;
+  align-items: stretch;
+  min-width: 150px;
 }
 
 .voice-button {
@@ -135,6 +137,7 @@
   cursor: pointer;
   transition: all 0.3s ease;
   font-size: 0.9rem;
+  width: 100%;
 }
 
 .voice-button:hover:not(:disabled) {
@@ -171,6 +174,7 @@
   cursor: pointer;
   transition: all 0.3s ease;
   font-size: 0.9rem;
+  width: 100%;
 }
 
 .clear-button:hover:not(:disabled) {
@@ -182,6 +186,30 @@
   opacity: 0.6;
   cursor: not-allowed;
 }
+
+.sample-button {
+  padding: 0.5rem 1rem;
+  background: linear-gradient(135deg, #4caf50 0%, #45a049 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 0.9rem;
+  width: 100%;
+}
+
+.sample-button:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
+}
+
+.sample-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 
 .text-input {
   width: 100%;

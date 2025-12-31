@@ -130,7 +130,7 @@ const AppContent = ({
                 <span className="voice-mode-slider"></span>
               </label>
             </div>
-            {currentPage !== 'home' && currentPage !== 'about' && (
+            {currentPage !== 'home' && (
               <button className="back-button" onClick={handleBackToHome} aria-label="Back to home">
                 ← Back to Home
               </button>
@@ -140,7 +140,7 @@ const AppContent = ({
               onClick={() => handleNavigate('about')}
               aria-label="About VoiceCompanion"
             >
-              👁️ About
+              <span className="about-button-icon">👁️</span> About
             </button>
           </div>
         </div>
