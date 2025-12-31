@@ -4,8 +4,46 @@ import { geminiService } from '../services/geminiService.js'
 const router = express.Router()
 
 /**
- * Real-time guidance for visually impaired users based on camera stream
- * POST /api/guidance/realtime
+ * @swagger
+ * /api/guidance/realtime:
+ *   post:
+ *     summary: Get real-time navigation guidance from camera image
+ *     tags: [Guidance]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - imageData
+ *             properties:
+ *               imageData:
+ *                 type: string
+ *                 description: Base64 encoded image from camera
+ *               previousContext:
+ *                 type: string
+ *                 description: Previous guidance context for continuity
+ *     responses:
+ *       200:
+ *         description: Navigation guidance response
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 guidance:
+ *                   type: string
+ *                 hazards:
+ *                   type: array
+ *                   items:
+ *                     type: string
+ *                 context:
+ *                   type: string
+ *       400:
+ *         description: Missing image data
+ *       500:
+ *         description: Server error
  */
 router.post('/realtime', async (req, res) => {
   try {

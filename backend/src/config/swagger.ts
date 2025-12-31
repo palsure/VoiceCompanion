@@ -23,11 +23,12 @@ const options: swaggerJsdoc.Options = {
       { name: 'Vision', description: 'Image analysis and vision services' },
       { name: 'Image Generation', description: 'Text-to-image generation' },
       { name: 'Text-to-Speech', description: 'TTS using ElevenLabs' },
-      { name: 'Speech-to-Text', description: 'STT using Google Cloud Speech' },
+      { name: 'Speech-to-Text', description: 'STT using ElevenLabs' },
       { name: 'Music', description: 'Music generation from scripts' },
       { name: 'Gallery', description: 'Art gallery management' },
       { name: 'Guidance', description: 'Real-time navigation guidance' },
       { name: 'Conversation', description: 'AI conversation endpoints' },
+      { name: 'Daily Living', description: 'Accessibility and daily living assistance' },
       { name: 'Language Learning', description: 'Language learning features' },
     ],
     components: {

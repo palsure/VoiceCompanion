@@ -165,13 +165,6 @@ const HomeScreen = ({ navigation }: Props) => {
             <Text style={styles.featureDescription}>
               Practice languages with intelligent feedback
             </Text>
-            <TouchableOpacity
-              style={styles.progressButtonInline}
-              onPress={() => navigation.navigate('Progress')}
-              activeOpacity={0.8}
-            >
-              <Text style={styles.progressButtonTextInline}>📊 View Your Progress</Text>
-            </TouchableOpacity>
           </TouchableOpacity>
 
           <TouchableOpacity

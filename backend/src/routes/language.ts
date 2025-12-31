@@ -4,6 +4,34 @@ import { feedbackService } from '../services/feedbackService.js'
 
 const router = Router()
 
+/**
+ * @swagger
+ * /api/language/analyze:
+ *   post:
+ *     summary: Analyze language for grammar and vocabulary
+ *     tags: [Language Learning]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - text
+ *             properties:
+ *               text:
+ *                 type: string
+ *               targetLanguage:
+ *                 type: string
+ *                 default: en
+ *     responses:
+ *       200:
+ *         description: Language analysis result
+ *       400:
+ *         description: Missing text
+ *       500:
+ *         description: Server error
+ */
 router.post('/analyze', async (req: Request, res: Response) => {
   try {
     const { text, targetLanguage = 'en' } = req.body
@@ -22,6 +50,34 @@ router.post('/analyze', async (req: Request, res: Response) => {
   }
 })
 
+/**
+ * @swagger
+ * /api/language/cultural:
+ *   post:
+ *     summary: Get cultural context for a phrase
+ *     tags: [Language Learning]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - text
+ *             properties:
+ *               text:
+ *                 type: string
+ *               targetLanguage:
+ *                 type: string
+ *                 default: en
+ *     responses:
+ *       200:
+ *         description: Cultural context
+ *       400:
+ *         description: Missing text
+ *       500:
+ *         description: Server error
+ */
 router.post('/cultural', async (req: Request, res: Response) => {
   try {
     const { text, targetLanguage = 'en' } = req.body

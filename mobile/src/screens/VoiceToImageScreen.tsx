@@ -50,11 +50,14 @@ const VoiceToImageScreen = ({ navigation }: Props) => {
   const loadGallery = async () => {
     try {
       setGalleryLoading(true)
+      console.log('[Gallery] Loading gallery from backend...')
       const resp: any = await galleryApi.list()
+      console.log('[Gallery] Response received:', JSON.stringify(resp).substring(0, 200))
       const arts = resp?.arts || resp?.data?.arts || []
+      console.log('[Gallery] Arts found:', arts.length)
       setSavedArts(Array.isArray(arts) ? arts : [])
-    } catch (e) {
-      console.warn('Failed to load gallery from backend:', e)
+    } catch (e: any) {
+      console.warn('[Gallery] Failed to load gallery from backend:', e?.message || e)
       setSavedArts([])
     } finally {
       setGalleryLoading(false)

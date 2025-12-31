@@ -7,6 +7,64 @@ import { personalizationService } from '../services/personalizationService.js'
 
 const router = Router()
 
+/**
+ * @swagger
+ * /api/conversation:
+ *   post:
+ *     summary: Send a message and get AI response
+ *     tags: [Conversation]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - message
+ *             properties:
+ *               message:
+ *                 type: string
+ *                 description: User message
+ *               mode:
+ *                 type: string
+ *                 enum: [accessibility, learning]
+ *                 default: learning
+ *               scenario:
+ *                 type: string
+ *                 description: Conversation scenario (learning mode)
+ *               imageData:
+ *                 type: string
+ *                 description: Base64 image data (accessibility mode)
+ *               conversationHistory:
+ *                 type: array
+ *                 items:
+ *                   type: object
+ *                   properties:
+ *                     role:
+ *                       type: string
+ *                       enum: [user, assistant]
+ *                     content:
+ *                       type: string
+ *     responses:
+ *       200:
+ *         description: AI response with optional audio
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 response:
+ *                   type: string
+ *                 feedback:
+ *                   type: object
+ *                 audioUrl:
+ *                   type: string
+ *       400:
+ *         description: Missing message
+ *       500:
+ *         description: Server error
+ */
+
 interface ConversationRequest {
   message: string
   scenario?: string

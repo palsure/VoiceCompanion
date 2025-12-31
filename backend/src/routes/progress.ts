@@ -3,6 +3,23 @@ import { progressService } from '../services/progressService.js'
 
 const router = Router()
 
+/**
+ * @swagger
+ * /api/progress:
+ *   get:
+ *     summary: Get user learning progress
+ *     tags: [Language Learning]
+ *     parameters:
+ *       - in: query
+ *         name: userId
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: User progress data
+ *       500:
+ *         description: Server error
+ */
 router.get('/', (req: Request, res: Response) => {
   try {
     const userId = (req.query.userId as string) || 'default'
@@ -14,6 +31,27 @@ router.get('/', (req: Request, res: Response) => {
   }
 })
 
+/**
+ * @swagger
+ * /api/progress:
+ *   post:
+ *     summary: Update user learning progress
+ *     tags: [Language Learning]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               userId:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Updated progress
+ *       500:
+ *         description: Server error
+ */
 router.post('/', (req: Request, res: Response) => {
   try {
     const userId = (req.body.userId as string) || 'default'

@@ -4,8 +4,55 @@ import { elevenLabsService } from '../services/elevenLabsService.js'
 const router = express.Router()
 
 /**
- * Transcribe audio to text using ElevenLabs Speech-to-Text
- * POST /api/speech-to-text/transcribe
+ * @swagger
+ * /api/speech-to-text/transcribe:
+ *   post:
+ *     summary: Transcribe audio to text using ElevenLabs
+ *     tags: [Speech-to-Text]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - audioData
+ *             properties:
+ *               audioData:
+ *                 type: string
+ *                 description: Base64 encoded audio data
+ *               languageCode:
+ *                 type: string
+ *                 description: Language code (e.g., en-US, es-ES)
+ *                 default: en-US
+ *               modelId:
+ *                 type: string
+ *                 description: ElevenLabs model ID
+ *                 default: scribe_v1
+ *               tagAudioEvents:
+ *                 type: boolean
+ *                 default: true
+ *               diarize:
+ *                 type: boolean
+ *                 default: true
+ *     responses:
+ *       200:
+ *         description: Transcription result
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 transcription:
+ *                   type: string
+ *                 languageCode:
+ *                   type: string
+ *                 model:
+ *                   type: string
+ *       400:
+ *         description: Missing audio data
+ *       500:
+ *         description: Server error
  */
 router.post('/transcribe', async (req, res) => {
   try {

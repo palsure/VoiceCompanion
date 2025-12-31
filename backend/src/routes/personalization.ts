@@ -3,6 +3,24 @@ import { personalizationService } from '../services/personalizationService.js'
 
 const router = Router()
 
+/**
+ * @swagger
+ * /api/personalization/skill-level:
+ *   get:
+ *     summary: Get user skill level assessment
+ *     tags: [Language Learning]
+ *     parameters:
+ *       - in: query
+ *         name: userId
+ *         schema:
+ *           type: string
+ *         description: User ID (defaults to 'default')
+ *     responses:
+ *       200:
+ *         description: Skill level assessment
+ *       500:
+ *         description: Server error
+ */
 router.get('/skill-level', (req: Request, res: Response) => {
   try {
     const userId = (req.query.userId as string) || 'default'
@@ -20,6 +38,23 @@ router.get('/skill-level', (req: Request, res: Response) => {
   }
 })
 
+/**
+ * @swagger
+ * /api/personalization/difficulty:
+ *   get:
+ *     summary: Get adaptive difficulty settings
+ *     tags: [Language Learning]
+ *     parameters:
+ *       - in: query
+ *         name: userId
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Difficulty settings
+ *       500:
+ *         description: Server error
+ */
 router.get('/difficulty', (req: Request, res: Response) => {
   try {
     const userId = (req.query.userId as string) || 'default'
@@ -31,6 +66,23 @@ router.get('/difficulty', (req: Request, res: Response) => {
   }
 })
 
+/**
+ * @swagger
+ * /api/personalization/recommendations:
+ *   get:
+ *     summary: Get learning recommendations
+ *     tags: [Language Learning]
+ *     parameters:
+ *       - in: query
+ *         name: userId
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Learning recommendations
+ *       500:
+ *         description: Server error
+ */
 router.get('/recommendations', (req: Request, res: Response) => {
   try {
     const userId = (req.query.userId as string) || 'default'

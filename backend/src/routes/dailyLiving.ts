@@ -4,6 +4,41 @@ import { visionService } from '../services/visionService.js'
 
 const router = express.Router()
 
+/**
+ * @swagger
+ * /api/daily-living/read-document:
+ *   post:
+ *     summary: Read and explain a document from image
+ *     tags: [Daily Living]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - imageData
+ *             properties:
+ *               imageData:
+ *                 type: string
+ *                 description: Base64 encoded image of document
+ *     responses:
+ *       200:
+ *         description: Document text and explanation
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 text:
+ *                   type: string
+ *                 explanation:
+ *                   type: string
+ *       400:
+ *         description: Missing image data
+ *       500:
+ *         description: Server error
+ */
 router.post('/read-document', async (req, res) => {
   try {
     const { imageData } = req.body
@@ -31,6 +66,35 @@ router.post('/read-document', async (req, res) => {
   }
 })
 
+/**
+ * @swagger
+ * /api/daily-living/shopping-assist:
+ *   post:
+ *     summary: Get shopping assistance for a product
+ *     tags: [Daily Living]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - imageData
+ *             properties:
+ *               imageData:
+ *                 type: string
+ *                 description: Base64 encoded image of product
+ *               question:
+ *                 type: string
+ *                 description: Specific question about the product
+ *     responses:
+ *       200:
+ *         description: Product info and assistance
+ *       400:
+ *         description: Missing image data
+ *       500:
+ *         description: Server error
+ */
 router.post('/shopping-assist', async (req, res) => {
   try {
     const { imageData, question } = req.body
@@ -60,6 +124,35 @@ router.post('/shopping-assist', async (req, res) => {
   }
 })
 
+/**
+ * @swagger
+ * /api/daily-living/navigation:
+ *   post:
+ *     summary: Get navigation assistance
+ *     tags: [Daily Living]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - query
+ *             properties:
+ *               query:
+ *                 type: string
+ *                 description: Navigation query
+ *               location:
+ *                 type: string
+ *                 description: Current location context
+ *     responses:
+ *       200:
+ *         description: Navigation directions
+ *       400:
+ *         description: Missing query
+ *       500:
+ *         description: Server error
+ */
 router.post('/navigation', async (req, res) => {
   try {
     const { query, location } = req.body
@@ -85,6 +178,38 @@ Provide clear, step-by-step directions that are easy to follow when spoken aloud
   }
 })
 
+/**
+ * @swagger
+ * /api/daily-living/tasks:
+ *   post:
+ *     summary: Manage daily tasks
+ *     tags: [Daily Living]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - action
+ *             properties:
+ *               action:
+ *                 type: string
+ *                 enum: [add, list, complete]
+ *               task:
+ *                 type: string
+ *               tasks:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *     responses:
+ *       200:
+ *         description: Task management response
+ *       400:
+ *         description: Missing action
+ *       500:
+ *         description: Server error
+ */
 router.post('/tasks', async (req, res) => {
   try {
     const { action, task, tasks } = req.body
