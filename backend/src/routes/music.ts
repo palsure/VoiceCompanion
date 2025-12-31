@@ -250,8 +250,62 @@ function createWavFile(audioData: Buffer, sampleRate: number): Buffer {
 }
 
 /**
- * Generate music from text/script using ElevenLabs with fallback
- * POST /api/music/generate
+ * @swagger
+ * /api/music/generate:
+ *   post:
+ *     summary: Generate music from text/script
+ *     description: |
+ *       Generates music from a text prompt using ElevenLabs API with fallback to open-source models.
+ *       Supports various music styles and lengths.
+ *     tags: [Music]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - prompt
+ *             properties:
+ *               prompt:
+ *                 type: string
+ *                 description: Text description of the music to generate (e.g., "Upbeat jazz with piano")
+ *                 example: "Upbeat jazz with piano, Style: Acoustic"
+ *               musicLengthMs:
+ *                 type: number
+ *                 description: Desired length in milliseconds
+ *                 default: 30000
+ *                 example: 30000
+ *               modelId:
+ *                 type: string
+ *                 description: ElevenLabs model ID (optional)
+ *               forceInstrumental:
+ *                 type: boolean
+ *                 description: Force instrumental music
+ *               style:
+ *                 type: string
+ *                 description: Music style (e.g., "acoustic", "electronic", "rock")
+ *     responses:
+ *       200:
+ *         description: Music generated successfully
+ *         content:
+ *           audio/wav:
+ *             schema:
+ *               type: string
+ *               format: binary
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 audio:
+ *                   type: string
+ *                   format: base64
+ *                 usedFallback:
+ *                   type: boolean
+ *       400:
+ *         description: Invalid request
+ *       500:
+ *         description: Server error
  */
 router.post('/generate', async (req, res) => {
   try {

@@ -17,6 +17,24 @@ function artSyncKey(a: Pick<SavedArt, 'image' | 'prompt' | 'style'>) {
   return `${a.style}::${a.prompt}::${a.image.slice(0, 120)}`
 }
 
+const SAMPLE_DESCRIPTIONS = [
+  'A serene sunset over mountains with purple and orange skies, reflecting in a calm lake below',
+  'A futuristic cityscape at night with neon lights, flying cars, and towering skyscrapers',
+  'A peaceful forest clearing with sunlight filtering through tall trees, wildflowers in the foreground',
+  'An abstract painting with vibrant colors, geometric shapes, and flowing lines',
+  'A cozy coffee shop interior with warm lighting, wooden furniture, and plants on the windowsill',
+  'A majestic lion standing on a rock overlooking the African savanna at golden hour',
+  'A whimsical underwater scene with colorful coral reefs, tropical fish, and sea turtles',
+  'A vintage steam train crossing a bridge over a river in the countryside',
+  'A magical fairy tale castle on a hilltop surrounded by clouds and rainbows',
+  'A minimalist modern kitchen with white cabinets, marble countertops, and natural light',
+  'A dramatic storm over the ocean with dark clouds, lightning, and crashing waves',
+  'A field of lavender in Provence, France, with rolling hills and a blue sky',
+  'A cyberpunk street scene with holographic advertisements, rain-soaked streets, and neon signs',
+  'A peaceful Japanese garden with a koi pond, cherry blossoms, and a stone bridge',
+  'An astronaut floating in space with Earth in the background, stars and galaxies surrounding',
+]
+
 const VoiceToArt = () => {
   const [prompt, setPrompt] = useState('')
   const [style, setStyle] = useState('realistic')
@@ -670,6 +688,12 @@ const VoiceToArt = () => {
     setError(null)
   }
 
+  const handleLoadSample = () => {
+    const randomIndex = Math.floor(Math.random() * SAMPLE_DESCRIPTIONS.length)
+    setPrompt(SAMPLE_DESCRIPTIONS[randomIndex])
+    setError(null)
+  }
+
   const styles = ['realistic', 'artistic', 'cartoon', 'abstract', 'photographic']
 
   return (
@@ -733,6 +757,14 @@ const VoiceToArt = () => {
               disabled={loading}
             >
               {isRecording ? '⏹ Stop Recording' : '🎤 Voice Input'}
+            </button>
+            <button
+              className="sample-button"
+              onClick={handleLoadSample}
+              disabled={loading || isRecording}
+              title="Load random sample description"
+            >
+              📄 Load Sample
             </button>
             {prompt && (
               <button

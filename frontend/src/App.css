@@ -123,6 +123,15 @@
   cursor: pointer;
   transition: all 0.3s ease;
   font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.about-button-icon {
+  font-size: 2rem;
+  display: inline-block;
+  line-height: 1;
 }
 
 .about-button:hover {

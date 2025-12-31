@@ -57,8 +57,42 @@ With melodies so fair
 Every note tells a story
 Of love, hope, and glory`
 
+const SAMPLE_SCRIPTS = [
+  DEFAULT_LYRICS,
+  `A gentle acoustic guitar melody with soft piano accompaniment, creating a peaceful and relaxing atmosphere perfect for meditation or quiet reflection. The tempo is slow and steady, with warm tones that evoke feelings of tranquility and inner peace.`,
+  `An upbeat electronic dance track with pulsing synthesizers, driving bass lines, and energetic drum patterns. The music builds to an exciting crescendo with layered melodies that create a sense of celebration and joy.`,
+  `A classical orchestral piece featuring strings, woodwinds, and gentle percussion. The composition has a majestic and elegant feel, with flowing melodies that tell a story of adventure and discovery.`,
+  `A smooth jazz composition with a sultry saxophone lead, walking bass line, and brushed drums. The music has a sophisticated and intimate atmosphere, perfect for a cozy evening or romantic setting.`,
+  `A powerful rock anthem with electric guitars, thundering drums, and a driving rhythm section. The energy builds throughout, creating an empowering and motivational feel that inspires action and determination.`,
+  `An ambient soundscape with ethereal synthesizers, gentle pads, and subtle atmospheric textures. The music creates a dreamy and immersive environment that transports the listener to another world.`,
+  `Verse 1:
+Stars are shining in the night
+Guiding us with their light
+Dreams are waiting to come true
+Everything starts fresh and new
+
+Chorus:
+Dance with the rhythm of life
+Feel the beat, let it thrive
+Music is our guiding star
+No matter how near or far
+
+Verse 2:
+Through the storm and through the calm
+Music is our healing balm
+It lifts us up when we're down
+Turns our sadness to a crown
+
+Chorus:
+Dance with the rhythm of life
+Feel the beat, let it thrive
+Music is our guiding star
+No matter how near or far`,
+  `A cinematic orchestral score with dramatic strings, powerful brass, and epic percussion. The music tells an emotional story with dynamic contrasts between quiet, intimate moments and grand, sweeping crescendos.`,
+]
+
 const ScriptToMusic = () => {
-  const [script, setScript] = useState(DEFAULT_LYRICS)
+  const [script, setScript] = useState('')
   const [loading, setLoading] = useState(false)
   const [generatedMusicUrl, setGeneratedMusicUrl] = useState<string | null>(null)
   const [generatedMusicBlob, setGeneratedMusicBlob] = useState<Blob | null>(null)
@@ -121,6 +155,11 @@ const ScriptToMusic = () => {
 
   const handleClearText = () => {
     setScript('')
+    setError(null)
+  }
+
+  const handleLoadSample = () => {
+    setScript(SAMPLE_SCRIPTS[0]) // Load the default/first sample
     setError(null)
   }
 
@@ -479,6 +518,14 @@ const ScriptToMusic = () => {
               disabled={loading}
             >
               {isRecording ? '⏹ Stop Recording' : '🎤 Voice Input'}
+            </button>
+            <button
+              className="sample-button"
+              onClick={handleLoadSample}
+              disabled={loading || isRecording}
+              title="Load sample script"
+            >
+              📄 Load Sample
             </button>
             {script && (
               <button
