@@ -464,7 +464,19 @@ AI-Partner/
 
 ### Google Cloud Run Deployment
 
-**Quick deployment:**
+**Cost-Optimized Deployment (Recommended):**
+```bash
+# Build and push images
+./gcp/build-and-push-local.sh
+
+# Deploy with cost-optimized settings (scale to zero)
+./gcp/deploy-cost-optimized.sh
+
+# Set up budget alerts ($50/month)
+./gcp/setup-budget-alerts.sh 50
+```
+
+**Standard Deployment:**
 ```bash
 # Build and push images
 ./gcp/build-and-push-local.sh
@@ -493,6 +505,12 @@ AI-Partner/
 - **Environment Variables**: `BACKEND_URL` and `BACKEND_HOST` set for frontend nginx
 
 For detailed deployment instructions, see [gcp/README.md](gcp/README.md).
+
+**Cost Optimization:**
+- Services automatically scale to zero when idle (no charges when not in use)
+- Only pay for actual request processing time
+- Set up budget alerts to prevent unexpected costs
+- See [gcp/COST_OPTIMIZATION.md](gcp/COST_OPTIMIZATION.md) for detailed cost management guide
 
 ## Troubleshooting
 

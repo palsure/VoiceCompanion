@@ -22,16 +22,34 @@ This folder contains scripts and configuration files for deploying VoiceCompanio
 
 ### Documentation
 - **`MANAGE_SERVICES.md`** - Guide for managing Cloud Run services
+- **`COST_OPTIMIZATION.md`** - Cost optimization and budget setup guide
 
 ## Quick Start
 
 ### Deploy to Cloud Run
+
+**Cost-Optimized (Recommended for development):**
+```bash
+# Build and push images
+./gcp/build-and-push-local.sh
+
+# Deploy with cost-optimized settings (scale to zero)
+./gcp/deploy-cost-optimized.sh
+```
+
+**Standard Deployment (Better performance):**
 ```bash
 # Build and push images
 ./gcp/build-and-push-local.sh
 
 # Deploy services
 ./gcp/deploy-to-cloudrun.sh
+```
+
+### Set Up Budget Alerts
+```bash
+# Set $50/month budget with alerts
+./gcp/setup-budget-alerts.sh 50
 ```
 
 ### Manage Services
@@ -64,6 +82,13 @@ This folder contains scripts and configuration files for deploying VoiceCompanio
 - **Frontend**: Deployed as `voicecompanion-frontend` service (nginx proxy)
 - **Container Registry**: Uses GCR (`gcr.io/PROJECT_ID/...`)
 - **Environment Variables**: `BACKEND_URL` and `BACKEND_HOST` set for frontend nginx
+- **Cost Optimization**: Services scale to zero when idle (`min-instances=0`)
 
-For detailed deployment instructions, see the main [README.md](../README.md) and deployment documentation.
+## Cost Management
+
+- **Scale to Zero**: Services automatically stop when not in use (no charges when idle)
+- **Budget Alerts**: Set up budget alerts to prevent unexpected costs
+- **Cost Estimates**: See [COST_OPTIMIZATION.md](COST_OPTIMIZATION.md) for detailed cost breakdown
+
+For detailed deployment instructions, see the main [README.md](../README.md) and [COST_OPTIMIZATION.md](COST_OPTIMIZATION.md).
 
