@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { imageGenerationApi, speechToTextApi, galleryApi } from '../services/api'
 import PaletteIcon from './PaletteIcon'
+import FeatureInfoIcon from './FeatureInfoIcon'
 import './VoiceToArt.css'
 
 interface SavedArt {
@@ -9,6 +10,11 @@ interface SavedArt {
   prompt: string
   style: string
   createdAt: number
+}
+
+function artSyncKey(a: Pick<SavedArt, 'image' | 'prompt' | 'style'>) {
+  // Good-enough dedupe across clients without hashing libs.
+  return `${a.style}::${a.prompt}::${a.image.slice(0, 120)}`
 }
 
 const VoiceToArt = () => {
@@ -31,40 +37,69 @@ const VoiceToArt = () => {
   const audioChunksRef = useRef<Blob[]>([])
   const isInitialMountRef = useRef(true)
 
-  // Load saved arts from localStorage on mount (backend API is placeholder)
+  // Load saved arts (prefer backend for cross-platform sync; localStorage as fallback)
   useEffect(() => {
     const loadGallery = async () => {
       try {
-        // Always load from localStorage first (backend API is currently a placeholder)
-        const saved = localStorage.getItem('voiceCompanion_savedArts')
-        if (saved) {
-          try {
+        // Read localStorage first (we may need it to backfill backend for cross-platform sync)
+        let localArts: SavedArt[] = []
+        try {
+          const saved = localStorage.getItem('voiceCompanion_savedArts')
+          if (saved) {
             const parsed = JSON.parse(saved)
-            if (Array.isArray(parsed) && parsed.length > 0) {
-              console.log('Loaded saved arts from localStorage:', parsed.length, 'items')
-              // Verify each item has required fields
-              const validArts = parsed.filter((art: any) => art && art.image && art.id)
-              console.log('Valid arts after filtering:', validArts.length, 'items')
-              if (validArts.length > 0) {
-                setSavedArts(validArts)
-                return
-              }
-            }
-          } catch (parseError) {
-            console.error('Failed to parse saved arts:', parseError)
+            localArts = Array.isArray(parsed) ? parsed : []
           }
+        } catch (e) {
+          console.warn('Failed to load gallery from localStorage:', e)
         }
-        
-        // If localStorage is empty or invalid, try backend API as fallback
+
+        // Try backend API (shared across web + mobile)
         try {
           const apiResponse = await galleryApi.list()
-          if (apiResponse && apiResponse.arts && apiResponse.arts.length > 0) {
-            console.log('Loaded saved arts from API:', apiResponse.arts.length, 'items')
-            setSavedArts(apiResponse.arts)
-            return
+          const apiArts: SavedArt[] = Array.isArray(apiResponse?.arts) ? apiResponse.arts : []
+
+          // Merge API + local (so UI shows everything immediately)
+          const seen = new Set<string>()
+          const merged: SavedArt[] = []
+          for (const a of [...apiArts, ...localArts]) {
+            if (!a?.image || !a?.prompt) continue
+            const k = artSyncKey(a)
+            if (seen.has(k)) continue
+            seen.add(k)
+            merged.push(a)
           }
+          if (merged.length > 0) setSavedArts(merged)
+
+          // If backend is missing items, backfill from localStorage so mobile can see them.
+          // Cap sync to avoid huge uploads.
+          const apiKeys = new Set(apiArts.map((a) => artSyncKey(a)))
+          const missing = localArts.filter((a) => a?.image && a?.prompt && !apiKeys.has(artSyncKey(a))).slice(0, 25)
+          if (missing.length > 0) {
+            console.log(`Syncing ${missing.length} local gallery items to backend...`)
+            for (const a of missing) {
+              try {
+                await galleryApi.save(a.image, a.prompt, a.style || 'realistic')
+              } catch (syncErr) {
+                console.warn('Gallery sync failed for one item:', syncErr)
+              }
+            }
+            // Refresh from backend after sync
+            try {
+              const refreshed = await galleryApi.list()
+              if (Array.isArray(refreshed?.arts)) {
+                setSavedArts(refreshed.arts)
+              }
+            } catch {}
+          }
+          return
         } catch (apiError) {
           console.warn('API load failed:', apiError)
+        }
+
+        // Fallback to localStorage (legacy)
+        if (localArts.length > 0) {
+          setSavedArts(localArts)
+          return
         }
         
         // If both are empty, set empty array
@@ -643,7 +678,30 @@ const VoiceToArt = () => {
         <div className="header-content">
           <PaletteIcon size={64} className="animated" />
           <div className="header-text">
-            <h1 className="header-title">Voice to Art</h1>
+            <div className="header-title-row">
+              <h1 className="header-title">Voice to Art</h1>
+              <FeatureInfoIcon
+                title="Voice to Art"
+                description="Transform your voice descriptions into stunning AI-generated artwork. Simply describe what you want to see, and our AI will create beautiful images for you."
+                howItWorks={[
+                  'Speak your description or type it in the text box',
+                  'Voice input uses speech recognition to convert your words to text',
+                  'Choose an art style (realistic, artistic, cartoon, abstract, or photographic)',
+                  'Click "Create Art" to generate your image using Google Imagen AI',
+                  'View your generated artwork and save it to your gallery',
+                  'Access your saved art anytime from the "My Gallery" tab'
+                ]}
+                features={[
+                  'Voice input support for hands-free creation',
+                  'Multiple art styles to choose from',
+                  'AI-powered image generation using Google Imagen',
+                  'ElevenLabs integration for natural voice interactions',
+                  'Personal gallery to save and manage your art',
+                  'Download and share your creations',
+                  'Accessible voice mode for all users'
+                ]}
+              />
+            </div>
             <p className="header-subtitle">Describe what you want to see, and we'll create it</p>
           </div>
         </div>

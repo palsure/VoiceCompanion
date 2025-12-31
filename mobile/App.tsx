@@ -9,22 +9,24 @@ import { AccessibilityProvider } from './src/contexts/AccessibilityContext'
 import { VoiceModeProvider } from './src/contexts/VoiceModeContext'
 import HomeScreen from './src/screens/HomeScreen'
 import LearningModeScreen from './src/screens/LearningModeScreen'
-import AccessibilityModeScreen from './src/screens/AccessibilityModeScreen'
 import ProgressScreen from './src/screens/ProgressScreen'
 import VoiceToImageScreen from './src/screens/VoiceToImageScreen'
 import ImageToVoiceScreen from './src/screens/ImageToVoiceScreen'
 import BlindGuidanceScreen from './src/screens/BlindGuidanceScreen'
 import VoiceGuidedShoppingScreen from './src/screens/VoiceGuidedShoppingScreen'
+import ScriptToMusicScreen from './src/screens/ScriptToMusicScreen'
+import AboutScreen from './src/screens/AboutScreen'
 
 export type RootStackParamList = {
   Home: undefined
   Learning: undefined
-  Accessibility: undefined
   Progress: undefined
   VoiceToImage: undefined
   ImageToVoice: undefined
   BlindGuidance: undefined
   VoiceGuidedShopping: undefined
+  ScriptToMusic: undefined
+  About: undefined
 }
 
 const Stack = createStackNavigator<RootStackParamList>()
@@ -138,11 +140,6 @@ export default function App() {
               options={{ title: 'Language Learning' }}
             />
             <Stack.Screen 
-              name="Accessibility" 
-              component={AccessibilityModeScreen}
-              options={{ title: 'Accessibility Assistant' }}
-            />
-            <Stack.Screen 
               name="Progress" 
               component={ProgressScreen}
               options={{ title: 'Your Progress' }}
@@ -169,6 +166,16 @@ export default function App() {
               name="VoiceGuidedShopping" 
               component={VoiceGuidedShoppingScreen}
               options={{ title: 'Voice Guided Shopping' }}
+            />
+            <Stack.Screen
+              name="ScriptToMusic"
+              component={ScriptToMusicScreen}
+              options={{ title: '🎵 Script to Music' }}
+            />
+            <Stack.Screen
+              name="About"
+              component={AboutScreen}
+              options={{ title: 'About' }}
             />
             </Stack.Navigator>
           </NavigationContainer>

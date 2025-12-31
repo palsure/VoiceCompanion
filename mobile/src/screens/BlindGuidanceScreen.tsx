@@ -14,6 +14,7 @@ import { CameraView, useCameraPermissions, CameraType } from 'expo-camera'
 import * as ImagePicker from 'expo-image-picker'
 import * as Speech from 'expo-speech'
 import { guidanceApi } from '../services/api'
+import FeatureInfoIcon from '../components/FeatureInfoIcon'
 
 type BlindGuidanceScreenNavigationProp = StackNavigationProp<RootStackParamList, 'BlindGuidance'>
 
@@ -24,6 +25,7 @@ interface Props {
 const BlindGuidanceScreen = ({ navigation }: Props) => {
   const [permission, requestPermission] = useCameraPermissions()
   const [isActive, setIsActive] = useState(false)
+  const [simulationActive, setSimulationActive] = useState(false)
   const [facing, setFacing] = useState<CameraType>('back')
   const [loading, setLoading] = useState(false)
   const [guidance, setGuidance] = useState<{
@@ -33,11 +35,21 @@ const BlindGuidanceScreen = ({ navigation }: Props) => {
     objects: string[]
   } | null>(null)
   const [previousContext, setPreviousContext] = useState<string>('')
+  const [currentStepIndex, setCurrentStepIndex] = useState(0)
   const intervalRef = useRef<NodeJS.Timeout | null>(null)
   const cameraRef = useRef<any>(null)
+  const simulationRef = useRef<NodeJS.Timeout | null>(null)
+
+  const NAVIGATION_STEPS = [
+    { title: 'Starting Path', navigation: 'Continue straight. Path is clear.', hazards: [] as string[] },
+    { title: 'Approaching Door', navigation: 'Door on your right. Continue forward.', hazards: [] as string[] },
+    { title: 'Warning: Stairs Ahead', navigation: 'Stop and proceed with caution. Stairs ahead.', hazards: ['Stairs ahead'] },
+    { title: 'After Stairs', navigation: 'Clear path after stairs. Continue forward.', hazards: [] as string[] },
+    { title: 'Destination Reached', navigation: 'Destination reached. Exit door on your left.', hazards: [] as string[] },
+  ]
 
   useEffect(() => {
-    if (isActive && permission?.granted) {
+    if (isActive && permission?.granted && !simulationActive) {
       // Start continuous guidance updates every 3 seconds
       intervalRef.current = setInterval(() => {
         captureAndAnalyze()
@@ -57,7 +69,15 @@ const BlindGuidanceScreen = ({ navigation }: Props) => {
         clearInterval(intervalRef.current)
       }
     }
-  }, [isActive, permission?.granted])
+  }, [isActive, permission?.granted, simulationActive])
+
+  useEffect(() => {
+    return () => {
+      if (simulationRef.current) {
+        clearInterval(simulationRef.current)
+      }
+    }
+  }, [])
 
   const handleRequestPermission = async () => {
     const result = await requestPermission()
@@ -118,6 +138,7 @@ const BlindGuidanceScreen = ({ navigation }: Props) => {
   }
 
   const handleToggle = () => {
+    if (simulationActive) return
     if (!permission?.granted) {
       handleRequestPermission()
       return
@@ -127,6 +148,51 @@ const BlindGuidanceScreen = ({ navigation }: Props) => {
       setGuidance(null)
       setPreviousContext('')
     }
+  }
+
+  const handleStartSimulation = () => {
+    setSimulationActive(true)
+    setIsActive(false)
+    setCurrentStepIndex(0)
+    const step = NAVIGATION_STEPS[0]
+    setGuidance({
+      description: step.title,
+      hazards: step.hazards,
+      navigation: step.navigation,
+      objects: [],
+    })
+    Speech.speak(step.navigation, { language: 'en', rate: 0.85, pitch: 1.0 })
+
+    simulationRef.current = setInterval(() => {
+      setCurrentStepIndex((prev) => {
+        const next = (prev + 1) % NAVIGATION_STEPS.length
+        const s = NAVIGATION_STEPS[next]
+        setGuidance({
+          description: s.title,
+          hazards: s.hazards,
+          navigation: s.navigation,
+          objects: [],
+        })
+        if (s.hazards.length > 0) {
+          Speech.speak(`Warning: ${s.hazards.join('. ')}`, { language: 'en', rate: 0.9, pitch: 1.2 })
+        } else {
+          Speech.speak(s.navigation, { language: 'en', rate: 0.85, pitch: 1.0 })
+        }
+        return next
+      })
+    }, 4500)
+  }
+
+  const handleStopSimulation = () => {
+    setSimulationActive(false)
+    if (simulationRef.current) {
+      clearInterval(simulationRef.current)
+      simulationRef.current = null
+    }
+    Speech.stop()
+    setGuidance(null)
+    setPreviousContext('')
+    setCurrentStepIndex(0)
   }
 
   if (!permission) {
@@ -141,7 +207,25 @@ const BlindGuidanceScreen = ({ navigation }: Props) => {
     return (
       <View style={styles.container}>
         <View style={styles.header}>
-          <Text style={styles.title}>🧭 Real-Time Guidance</Text>
+          <View style={styles.titleRow}>
+            <Text style={styles.title}>🧭 Real-Time Guidance</Text>
+            <FeatureInfoIcon
+              title="Real-Time Guidance"
+              description="Continuous voice guidance for safe navigation based on your camera."
+              howItWorks={[
+                'Start camera to analyze the environment continuously',
+                'AI detects hazards and navigation cues',
+                'ElevenLabs text-to-speech reads guidance aloud',
+                'Use Simulation mode to demo without camera',
+              ]}
+              features={[
+                'ElevenLabs-powered voice guidance',
+                'Hazard alerts',
+                'Navigation instructions',
+                'Simulation mode',
+              ]}
+            />
+          </View>
           <Text style={styles.subtitle}>
             Get voice-guided navigation and obstacle detection
           </Text>
@@ -164,14 +248,52 @@ const BlindGuidanceScreen = ({ navigation }: Props) => {
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       <View style={styles.header}>
-        <Text style={styles.title}>🧭 Real-Time Guidance</Text>
+        <View style={styles.titleRow}>
+          <Text style={styles.title}>🧭 Real-Time Guidance</Text>
+          <FeatureInfoIcon
+            title="Real-Time Guidance"
+            description="Continuous voice guidance for safe navigation based on your camera."
+            howItWorks={[
+              'Start camera to analyze the environment continuously',
+              'AI detects hazards and navigation cues',
+              'ElevenLabs text-to-speech reads guidance aloud',
+              'Use Simulation mode to demo without camera',
+            ]}
+            features={[
+              'ElevenLabs-powered voice guidance',
+              'Hazard alerts',
+              'Navigation instructions',
+              'Simulation mode',
+            ]}
+          />
+        </View>
         <Text style={styles.subtitle}>
           Continuous voice guidance for safe navigation
         </Text>
       </View>
 
+      <View style={styles.controlsRow}>
+        <TouchableOpacity
+          style={[styles.simButton, simulationActive && styles.simButtonActive]}
+          onPress={simulationActive ? handleStopSimulation : handleStartSimulation}
+        >
+          <Text style={styles.simButtonText}>
+            {simulationActive ? '⏹ Stop Simulation' : '🎬 Start Simulation'}
+          </Text>
+        </TouchableOpacity>
+      </View>
+
+      {simulationActive && (
+        <View style={styles.simInfo}>
+          <Text style={styles.simLabel}>🎬 Simulation Mode</Text>
+          <Text style={styles.simName}>
+            Step {currentStepIndex + 1} of {NAVIGATION_STEPS.length}: {NAVIGATION_STEPS[currentStepIndex]?.title}
+          </Text>
+        </View>
+      )}
+
       <TouchableOpacity
-        style={[styles.toggleButton, isActive && styles.toggleButtonActive]}
+        style={[styles.toggleButton, isActive && styles.toggleButtonActive, simulationActive && { opacity: 0.6 }]}
         onPress={handleToggle}
       >
         <Text style={styles.toggleButtonText}>
@@ -257,6 +379,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 24,
   },
+  titleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 10,
+    flexWrap: 'wrap',
+  },
   title: {
     fontSize: 28,
     fontWeight: 'bold',
@@ -268,6 +397,47 @@ const styles = StyleSheet.create({
     color: '#666',
     textAlign: 'center',
     paddingHorizontal: 20,
+  },
+  controlsRow: {
+    marginBottom: 12,
+  },
+  simButton: {
+    backgroundColor: '#764ba2',
+    borderRadius: 12,
+    padding: 16,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  simButtonActive: {
+    backgroundColor: '#f44336',
+  },
+  simButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '700',
+  },
+  simInfo: {
+    backgroundColor: '#fff9e6',
+    borderRadius: 12,
+    padding: 16,
+    borderWidth: 2,
+    borderColor: '#ff9800',
+    marginBottom: 16,
+  },
+  simLabel: {
+    fontSize: 13,
+    fontWeight: '800',
+    color: '#ff9800',
+    marginBottom: 6,
+  },
+  simName: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#333',
   },
   toggleButton: {
     backgroundColor: '#667eea',

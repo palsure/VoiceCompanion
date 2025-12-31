@@ -14,9 +14,10 @@ interface CameraCaptureProps {
   active: boolean
   onToggle: (active: boolean) => void
   onImageCapture?: (imageData: string | null) => void
+  showPickImageButton?: boolean
 }
 
-const CameraCapture = ({ active, onToggle, onImageCapture }: CameraCaptureProps) => {
+const CameraCapture = ({ active, onToggle, onImageCapture, showPickImageButton = true }: CameraCaptureProps) => {
   const [permission, requestPermission] = useCameraPermissions()
   const [facing, setFacing] = useState<CameraType>('back')
   const [imageUri, setImageUri] = useState<string | null>(null)
@@ -131,12 +132,14 @@ const CameraCapture = ({ active, onToggle, onImageCapture }: CameraCaptureProps)
               <Text style={styles.buttonText}>📸 Capture</Text>
             </TouchableOpacity>
             <View style={{ width: 8 }} />
-            <TouchableOpacity
-              style={styles.pickButton}
-              onPress={handlePickImage}
-            >
-              <Text style={styles.buttonText}>🖼️ Pick</Text>
-            </TouchableOpacity>
+            {showPickImageButton && (
+              <TouchableOpacity
+                style={styles.pickButton}
+                onPress={handlePickImage}
+              >
+                <Text style={styles.buttonText}>🖼️ Pick</Text>
+              </TouchableOpacity>
+            )}
           </>
         )}
       </View>

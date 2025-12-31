@@ -1,30 +1,106 @@
 import { useState, useEffect, useRef } from 'react'
 import { guidanceApi, textToSpeechApi } from '../services/api'
 import CameraCapture from './CameraCapture'
+import FeatureInfoIcon from './FeatureInfoIcon'
 import './RealTimeGuidance.css'
 
-// Sample navigation scenario frames (base64 encoded placeholder images)
-// In a real implementation, these would be actual sample images
-const SAMPLE_FRAMES = [
+function animateStreetNavigation(
+  ctx: CanvasRenderingContext2D,
+  width: number,
+  height: number
+) {
+  let frameId = 0
+  let t = 0
+
+  const draw = () => {
+    t += 1
+    ctx.clearRect(0, 0, width, height)
+
+    // Background sky/ground
+    ctx.fillStyle = '#0b1020'
+    ctx.fillRect(0, 0, width, height)
+
+    // Road
+    const roadTop = height * 0.35
+    ctx.fillStyle = '#141a2d'
+    ctx.beginPath()
+    ctx.moveTo(width * 0.35, roadTop)
+    ctx.lineTo(width * 0.65, roadTop)
+    ctx.lineTo(width * 0.92, height)
+    ctx.lineTo(width * 0.08, height)
+    ctx.closePath()
+    ctx.fill()
+
+    // Lane lines
+    ctx.strokeStyle = 'rgba(255,255,255,0.65)'
+    ctx.lineWidth = Math.max(2, width * 0.003)
+    ctx.setLineDash([10, 14])
+    ctx.beginPath()
+    ctx.moveTo(width * 0.5, roadTop)
+    ctx.lineTo(width * 0.5, height)
+    ctx.stroke()
+    ctx.setLineDash([])
+
+    // Moving "navigation marker"
+    const markerY = height - ((t % 140) / 140) * (height - roadTop)
+    ctx.fillStyle = '#22c55e'
+    ctx.beginPath()
+    ctx.arc(width * 0.5, markerY, Math.max(6, width * 0.012), 0, Math.PI * 2)
+    ctx.fill()
+
+    // Simple hazard pulse near top (to mimic step changes)
+    const pulse = (Math.sin(t / 12) + 1) / 2
+    ctx.fillStyle = `rgba(245, 158, 11, ${0.15 + pulse * 0.25})`
+    ctx.fillRect(width * 0.12, roadTop - 26, width * 0.76, 10)
+
+    frameId = window.requestAnimationFrame(draw)
+  }
+
+  frameId = window.requestAnimationFrame(draw)
+  return () => window.cancelAnimationFrame(frameId)
+}
+
+// Navigation steps with video simulation
+const NAVIGATION_STEPS = [
   {
-    image: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAwIiBoZWlnaHQ9IjQwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iNjAwIiBoZWlnaHQ9IjQwMCIgZmlsbD0iI2Y1ZjVmNSIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBmb250LXNpemU9IjI0IiBmaWxsPSIjMzMzIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkeT0iLjNlbSI+U3RhcnRpbmcgcGF0aDogQ2xlYXIgY29ycmlkb3IgaGVhZCBvZiB5b3U8L3RleHQ+PC9zdmc+',
-    description: 'Starting path: Clear corridor ahead of you'
+    step: 1,
+    title: 'Starting Path',
+    description: 'Clear corridor ahead of you. Begin walking forward.',
+    navigation: 'Continue straight ahead. The path is clear.',
+    hazards: [],
+    duration: 3000, // 3 seconds
   },
   {
-    image: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAwIiBoZWlnaHQ9IjQwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iNjAwIiBoZWlnaHQ9IjQwMCIgZmlsbD0iI2Y1ZjVmNSIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBmb250LXNpemU9IjI0IiBmaWxsPSIjMzMzIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkeT0iLjNlbSI+QXBwcm9hY2hpbmcgYSBkb29yIG9uIHlvdXIgcmlnaHQ8L3RleHQ+PC9zdmc+',
-    description: 'Approaching a door on your right'
+    step: 2,
+    title: 'Approaching Door',
+    description: 'A door is approaching on your right side.',
+    navigation: 'Continue forward. Door on your right - no action needed.',
+    hazards: [],
+    duration: 4000, // 4 seconds
   },
   {
-    image: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAwIiBoZWlnaHQ9IjQwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iNjAwIiBoZWlnaHQ9IjQwMCIgZmlsbD0iI2Y1ZjVmNSIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBmb250LXNpemU9IjI0IiBmaWxsPSIjZmY0NDQ0IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkeT0iLjNlbSI+V0FSTklORzogU3RhaXJzIGFoZWFkIGluIDUgc3RlcHM8L3RleHQ+PC9zdmc+',
-    description: 'WARNING: Stairs ahead in 5 steps'
+    step: 3,
+    title: 'Warning: Stairs Ahead',
+    description: 'WARNING: Stairs detected ahead in 5 steps.',
+    navigation: 'Stop and proceed with caution. Stairs ahead in 5 steps.',
+    hazards: ['Stairs ahead in 5 steps'],
+    duration: 5000, // 5 seconds
   },
   {
-    image: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAwIiBoZWlnaHQ9IjQwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iNjAwIiBoZWlnaHQ9IjQwMCIgZmlsbD0iI2Y1ZjVmNSIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBmb250LXNpemU9IjI0IiBmaWxsPSIjMzMzIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkeT0iLjNlbSI+Q2xlYXIgcGF0aCBhZnRlciBzdGFpcnM6IENvbnRpbnVlIGZvcndhcmQ8L3RleHQ+PC9zdmc+',
-    description: 'Clear path after stairs: Continue forward'
+    step: 4,
+    title: 'After Stairs',
+    description: 'Clear path after stairs. Continue forward safely.',
+    navigation: 'Clear path ahead. Continue forward.',
+    hazards: [],
+    duration: 4000, // 4 seconds
   },
   {
-    image: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAwIiBoZWlnaHQ9IjQwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iNjAwIiBoZWlnaHQ9IjQwMCIgZmlsbD0iI2Y1ZjVmNSIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBmb250LXNpemU9IjI0IiBmaWxsPSIjMzMzIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkeT0iLjNlbSI+RGVzdGluYXRpb24gcmVhY2hlZDogRXhpdCBkb29yIG9uIHlvdXIgbGVmdDwvL3RleHQ+PC9zdmc+',
-    description: 'Destination reached: Exit door on your left'
+    step: 5,
+    title: 'Destination Reached',
+    description: 'Destination reached. Exit door on your left.',
+    navigation: 'You have reached your destination. Exit door is on your left.',
+    hazards: [],
+    duration: 3000, // 3 seconds
   }
 ]
 
@@ -40,12 +116,14 @@ const RealTimeGuidance = () => {
     objects?: string[]
   } | null>(null)
   const [previousContext, setPreviousContext] = useState<string>('')
-  const [currentFrameIndex, setCurrentFrameIndex] = useState(0)
+  const [currentStepIndex, setCurrentStepIndex] = useState(0)
   const [isSimulationRunning, setIsSimulationRunning] = useState(false)
-  const intervalRef = useRef<NodeJS.Timeout | null>(null)
-  const simulationRef = useRef<NodeJS.Timeout | null>(null)
+  const [simulationProgress, setSimulationProgress] = useState(0)
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const simulationRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const simulationLoopRef = useRef<boolean>(false)
   const audioRef = useRef<HTMLAudioElement | null>(null)
+  const videoRef = useRef<HTMLVideoElement | null>(null)
 
   useEffect(() => {
     if (cameraActive && capturedImage && !simulationActive) {
@@ -70,35 +148,86 @@ const RealTimeGuidance = () => {
     }
   }, [cameraActive, capturedImage, simulationActive])
 
-  // Simulation mode: cycle through sample frames
+  // Initialize canvas animation as primary (since video URLs may not work)
   useEffect(() => {
     if (simulationActive) {
-      setCurrentFrameIndex(0)
+      const canvas = document.getElementById('navigation-canvas') as HTMLCanvasElement
+      const video = videoRef.current
+      
+      if (canvas && video) {
+        // Set canvas size
+        const container = video.parentElement
+        if (container) {
+          const rect = container.getBoundingClientRect()
+          canvas.width = rect.width || 800
+          canvas.height = rect.height || 450
+          
+          const ctx = canvas.getContext('2d')
+          if (ctx) {
+            // Show canvas, hide video
+            canvas.style.display = 'block'
+            video.style.display = 'none'
+            animateStreetNavigation(ctx, canvas.width, canvas.height)
+          }
+        }
+      }
+      
+      return () => {
+        if (canvas) {
+          canvas.style.display = 'none'
+        }
+        if (video) {
+          video.style.display = 'block'
+        }
+      }
+    }
+  }, [simulationActive])
+
+  // Simulation mode: cycle through navigation steps with video
+  useEffect(() => {
+    if (simulationActive) {
+      setCurrentStepIndex(0)
       setPreviousContext('')
       setIsSimulationRunning(true)
       simulationLoopRef.current = true
+      setSimulationProgress(0)
       
       // Start simulation cycle
       const runSimulation = async () => {
         while (simulationLoopRef.current && simulationActive) {
-          for (let i = 0; i < SAMPLE_FRAMES.length; i++) {
+          for (let i = 0; i < NAVIGATION_STEPS.length; i++) {
             if (!simulationLoopRef.current || !simulationActive) break
             
-            setCurrentFrameIndex(i)
-            const frame = SAMPLE_FRAMES[i]
-            setCapturedImage(frame.image)
+            setCurrentStepIndex(i)
+            const step = NAVIGATION_STEPS[i]
             
-            // Analyze frame and generate guidance
-            await analyzeSimulationFrame(frame.image, i)
+            // Update guidance with step information
+            const stepGuidance = {
+              description: step.description,
+              navigation: step.navigation,
+              hazards: step.hazards,
+              objects: []
+            }
+            setGuidance(stepGuidance)
+            setPreviousContext(step.description)
             
-            // Wait before next frame (4 seconds per frame)
-            for (let wait = 0; wait < 40 && simulationLoopRef.current; wait++) {
-              await new Promise(resolve => setTimeout(resolve, 100))
+            // Generate and play voice guidance
+            await playVoiceGuidance(stepGuidance)
+            
+            // Animate progress bar
+            const stepDuration = step.duration
+            const progressInterval = 50
+            const progressSteps = stepDuration / progressInterval
+            
+            for (let p = 0; p <= progressSteps && simulationLoopRef.current; p++) {
+              setSimulationProgress((i * 100 + (p / progressSteps) * (100 / NAVIGATION_STEPS.length)))
+              await new Promise(resolve => setTimeout(resolve, progressInterval))
             }
           }
           
           // Small pause before looping
           if (simulationLoopRef.current && simulationActive) {
+            setSimulationProgress(0)
             await new Promise(resolve => setTimeout(resolve, 2000))
           }
         }
@@ -109,13 +238,20 @@ const RealTimeGuidance = () => {
       // Stop simulation
       simulationLoopRef.current = false
       setIsSimulationRunning(false)
-      setCurrentFrameIndex(0)
+      setCurrentStepIndex(0)
+      setSimulationProgress(0)
       
       // Stop any playing audio
       if (audioRef.current) {
         audioRef.current.pause()
         audioRef.current.currentTime = 0
         audioRef.current = null
+      }
+      
+      // Stop video if playing
+      if (videoRef.current) {
+        videoRef.current.pause()
+        videoRef.current.currentTime = 0
       }
     }
 
@@ -124,6 +260,10 @@ const RealTimeGuidance = () => {
       if (audioRef.current) {
         audioRef.current.pause()
         audioRef.current = null
+      }
+      if (videoRef.current) {
+        videoRef.current.pause()
+        videoRef.current = null
       }
     }
   }, [simulationActive])
@@ -156,34 +296,6 @@ const RealTimeGuidance = () => {
     }
   }
 
-  const analyzeSimulationFrame = async (imageData: string, frameIndex: number) => {
-    try {
-      setLoading(true)
-      const result = await guidanceApi.realtime(imageData, previousContext)
-      
-      setGuidance(result)
-      if (result.description) {
-        setPreviousContext(result.description)
-      }
-      
-      // Generate and play voice guidance
-      await playVoiceGuidance(result)
-    } catch (error: any) {
-      console.error('Simulation guidance error:', error)
-      // Fallback to sample description
-      const sampleFrame = SAMPLE_FRAMES[frameIndex]
-      const fallbackGuidance = {
-        description: sampleFrame.description,
-        hazards: frameIndex === 2 ? ['Stairs ahead'] : [],
-        navigation: frameIndex === 2 ? 'Stop and proceed with caution. Stairs detected ahead.' : 'Continue forward safely.',
-        objects: []
-      }
-      setGuidance(fallbackGuidance)
-      await playVoiceGuidance(fallbackGuidance)
-    } finally {
-      setLoading(false)
-    }
-  }
 
   const playVoiceGuidance = async (guidanceData: {
     description: string
@@ -243,7 +355,8 @@ const RealTimeGuidance = () => {
     simulationLoopRef.current = false
     setSimulationActive(false)
     setIsSimulationRunning(false)
-    setCurrentFrameIndex(0)
+    setCurrentStepIndex(0)
+    setSimulationProgress(0)
     setGuidance(null)
     setPreviousContext('')
     
@@ -253,13 +366,47 @@ const RealTimeGuidance = () => {
       audioRef.current.currentTime = 0
       audioRef.current = null
     }
+    
+    // Stop video
+    if (videoRef.current) {
+      videoRef.current.pause()
+      videoRef.current.currentTime = 0
+    }
   }
 
   return (
     <div className="real-time-guidance">
       <div className="section-header">
-        <h2>🧭 Real-Time Guidance</h2>
-        <p>Continuous voice guidance for safe navigation</p>
+        <div className="header-content">
+          <div className="header-icon">🧭</div>
+          <div className="header-text">
+            <div className="header-title-row">
+              <h1 className="header-title">Real-Time Guidance</h1>
+              <FeatureInfoIcon
+                title="Real-Time Guidance"
+                description="Get continuous voice guidance for safe navigation using your camera. Perfect for visually impaired users navigating unfamiliar environments."
+                howItWorks={[
+                  'Enable your camera or start a simulation to begin',
+                  'The camera continuously captures and analyzes the scene',
+                  'AI identifies obstacles, hazards, and navigation cues using Google Cloud Gemini',
+                  'Navigation instructions are converted to speech using ElevenLabs text-to-speech',
+                  'Hear natural, human-like descriptions of the scene, navigation directions, and hazard warnings',
+                  'Simulation mode demonstrates the feature with sample scenarios'
+                ]}
+                features={[
+                  'Real-time camera stream analysis',
+                  'ElevenLabs-powered voice guidance with natural speech synthesis',
+                  'Continuous voice narration of surroundings',
+                  'Hazard detection and warnings',
+                  'Navigation instructions',
+                  'Simulation mode for demonstration',
+                  'Accessible for visually impaired users'
+                ]}
+              />
+            </div>
+            <p className="header-subtitle">Continuous voice guidance for safe navigation based on camera stream</p>
+          </div>
+        </div>
       </div>
 
       <div className="guidance-controls">
@@ -269,31 +416,63 @@ const RealTimeGuidance = () => {
         >
           {simulationActive ? '⏹ Stop Simulation' : '🎬 Start Simulation'}
         </button>
+        {!simulationActive && (
+          <button
+            className="camera-toggle"
+            onClick={() => {
+              setCameraActive(!cameraActive)
+            }}
+            aria-label={cameraActive ? 'Turn off camera' : 'Turn on camera'}
+          >
+            {cameraActive ? '📷 Stop Camera' : '📷 Start Camera'}
+          </button>
+        )}
       </div>
 
-      <CameraCapture
-        active={cameraActive && !simulationActive}
-        onToggle={(active) => {
-          if (active) {
-            setSimulationActive(false)
-          }
-          setCameraActive(active)
-        }}
-        onImageCapture={handleImageCapture}
-      />
+      {!simulationActive && (
+        <CameraCapture
+          active={cameraActive && !simulationActive}
+          onToggle={(active) => {
+            if (active) {
+              setSimulationActive(false)
+            }
+            setCameraActive(active)
+          }}
+          onImageCapture={handleImageCapture}
+          showUploadButton={false}
+          hideToggleButton={true}
+        />
+      )}
 
       {simulationActive && (
         <div className="simulation-preview">
           <div className="simulation-frame">
             <div className="video-container">
-              <img 
-                src={SAMPLE_FRAMES[currentFrameIndex]?.image || SAMPLE_FRAMES[0].image} 
-                alt={`Simulation frame ${currentFrameIndex + 1}`}
-                className="simulation-image"
-              />
-              <div className="simulation-overlay">
-                <span className="simulation-label">🎬 Simulation Mode</span>
-                <span className="simulation-frame-count">Frame {currentFrameIndex + 1} of {SAMPLE_FRAMES.length}</span>
+              <div className="video-wrapper">
+                <video
+                  ref={videoRef}
+                  className="simulation-video"
+                  autoPlay
+                  loop
+                  muted
+                  playsInline
+                  preload="auto"
+                >
+                  <source src="https://videos.pexels.com/video-files/3045163/3045163-hd_1920_1080_25fps.mp4" type="video/mp4" />
+                  <source src="https://sample-videos.com/video123/mp4/720/big_buck_bunny_720p_1mb.mp4" type="video/mp4" />
+                  Your browser does not support the video tag.
+                </video>
+                <canvas id="navigation-canvas" className="navigation-canvas" style={{ display: 'none' }}></canvas>
+                <div className="simulation-overlay">
+                  <span className="simulation-label">🎬 Simulation Mode</span>
+                  <span className="simulation-step-count">Step {currentStepIndex + 1} of {NAVIGATION_STEPS.length}</span>
+                </div>
+                <div className="progress-bar-container">
+                  <div 
+                    className="progress-bar" 
+                    style={{ width: `${simulationProgress}%` }}
+                  ></div>
+                </div>
               </div>
             </div>
           </div>
@@ -302,9 +481,16 @@ const RealTimeGuidance = () => {
             <div className="simulation-voice-description">
               <div className="voice-description-header">
                 <span className="voice-icon">🔊</span>
-                <h3>Voice Description</h3>
+                <h3>Navigation Guidance</h3>
+                {NAVIGATION_STEPS[currentStepIndex] && (
+                  <span className="step-title">{NAVIGATION_STEPS[currentStepIndex].title}</span>
+                )}
               </div>
               <div className="voice-description-content">
+                <div className="step-indicator">
+                  <span className="step-number">Step {currentStepIndex + 1}</span>
+                  <span className="step-total">of {NAVIGATION_STEPS.length}</span>
+                </div>
                 <p className="description-text">{guidance.description}</p>
                 {guidance.navigation && (
                   <p className="navigation-text">🧭 {guidance.navigation}</p>

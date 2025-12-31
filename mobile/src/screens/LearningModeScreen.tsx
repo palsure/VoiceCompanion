@@ -11,6 +11,7 @@ import { RootStackParamList } from '../../App'
 import ScenarioSelector from '../components/ScenarioSelector'
 import VoiceConversation from '../components/VoiceConversation'
 import FeedbackPanel from '../components/FeedbackPanel'
+import FeatureInfoIcon from '../components/FeatureInfoIcon'
 
 type LearningScreenNavigationProp = StackNavigationProp<RootStackParamList, 'Learning'>
 
@@ -24,6 +25,29 @@ const LearningModeScreen = ({ navigation }: Props) => {
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+      <View style={styles.headerCard}>
+        <View style={styles.titleRow}>
+          <Text style={styles.title}>📚 Language Learning</Text>
+          <FeatureInfoIcon
+            title="Language Learning"
+            description="Practice languages with scenarios and intelligent feedback."
+            howItWorks={[
+              'Pick a scenario (travel, restaurant, shopping, etc.)',
+              'Have a guided voice conversation',
+              'Get feedback on grammar, vocabulary, and pronunciation',
+              'ElevenLabs provides natural voice examples and guidance',
+            ]}
+            features={[
+              'Scenario-based practice',
+              'Feedback panel',
+              'Progress tracking',
+              'ElevenLabs voice guidance',
+            ]}
+          />
+        </View>
+        <Text style={styles.subtitle}>Practice languages with intelligent feedback and personalized scenarios</Text>
+      </View>
+
       <ScenarioSelector
         selectedScenario={selectedScenario}
         onSelectScenario={setSelectedScenario}
@@ -56,6 +80,32 @@ const styles = StyleSheet.create({
   content: {
     padding: 16,
     paddingBottom: 40,
+  },
+  headerCard: {
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    padding: 18,
+    marginBottom: 16,
+    borderWidth: 2,
+    borderColor: '#e0e0e0',
+  },
+  titleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 10,
+    flexWrap: 'wrap',
+    marginBottom: 6,
+  },
+  title: {
+    fontSize: 22,
+    fontWeight: '800',
+    color: '#1a1a1a',
+  },
+  subtitle: {
+    fontSize: 14,
+    color: '#666',
+    lineHeight: 20,
   },
   progressButton: {
     backgroundColor: '#667eea',

@@ -7,9 +7,11 @@ interface CameraCaptureProps {
   onToggle: (active: boolean) => void
   onImageCapture?: (imageData: string | null) => void
   onOpenGallery?: () => void
+  showUploadButton?: boolean
+  hideToggleButton?: boolean
 }
 
-const CameraCapture = ({ active, onToggle, onImageCapture, onOpenGallery }: CameraCaptureProps) => {
+const CameraCapture = ({ active, onToggle, onImageCapture, onOpenGallery, showUploadButton = true, hideToggleButton = false }: CameraCaptureProps) => {
   const { videoRef, isActive, error, startCamera, stopCamera, captureImage } = useCamera()
 
   useEffect(() => {
@@ -56,29 +58,33 @@ const CameraCapture = ({ active, onToggle, onImageCapture, onOpenGallery }: Came
           </button>
         )}
 
-        <label className="upload-button">
-          📁 Upload Image
-          <input
-            type="file"
-            accept="image/*"
-            onChange={handleFileUpload}
-            style={{ display: 'none' }}
-          />
-        </label>
+        {showUploadButton && (
+          <label className="upload-button">
+            📁 Upload Image
+            <input
+              type="file"
+              accept="image/*"
+              onChange={handleFileUpload}
+              style={{ display: 'none' }}
+            />
+          </label>
+        )}
 
-        <button
-          className="camera-toggle"
-          onClick={() => {
-            if (isActive) {
-              stopCamera()
-            } else {
-              startCamera()
-            }
-          }}
-          aria-label={isActive ? 'Turn off camera' : 'Turn on camera'}
-        >
-          {isActive ? '📷 Stop Camera' : '📷 Start Camera'}
-        </button>
+        {!hideToggleButton && (
+          <button
+            className="camera-toggle"
+            onClick={() => {
+              if (isActive) {
+                stopCamera()
+              } else {
+                startCamera()
+              }
+            }}
+            aria-label={isActive ? 'Turn off camera' : 'Turn on camera'}
+          >
+            {isActive ? '📷 Stop Camera' : '📷 Start Camera'}
+          </button>
+        )}
       </div>
       
       {isActive && (

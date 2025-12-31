@@ -13,6 +13,7 @@ import HomePage from './components/HomePage'
 import AnimatedLogo from './components/AnimatedLogo'
 import ScriptToMusic from './components/ScriptToMusic'
 import About from './components/About'
+import FeatureInfoIcon from './components/FeatureInfoIcon'
 import './App.css'
 
 type Page = 'home' | 'accessibility' | 'learning' | 'voice-to-art' | 'image-to-voice' | 'script-to-music' | 'real-time-guidance' | 'voice-guided-shopping' | 'about'
@@ -181,28 +182,65 @@ const AppContent = ({
             </div>
           </div>
         ) : currentPage === 'learning' ? (
-          <div className="app-content">
-            <div className="left-panel">
-              <ScenarioSelector
-                selectedScenario={selectedScenario}
-                onSelectScenario={setSelectedScenario}
-                selectedLanguage={selectedLanguage}
-                onSelectLanguage={setSelectedLanguage}
-                selectedDifficulty={selectedDifficulty}
-                onSelectDifficulty={setSelectedDifficulty}
-              />
-              <VoiceConversation
-                scenario={selectedScenario}
-                onFeedback={setCurrentFeedback}
-                mode="learning"
-                targetLanguage={selectedLanguage}
-                difficulty={selectedDifficulty}
-              />
+          <div className="app-content learning-content">
+            <div className="learning-header-section">
+              <div className="section-header">
+                <div className="header-content">
+                  <div className="header-icon">📚</div>
+                  <div className="header-text">
+                    <div className="header-title-row">
+                      <h1 className="header-title">Language Learning</h1>
+                      <FeatureInfoIcon
+                        title="Language Learning"
+                        description="Practice languages with intelligent feedback and personalized scenarios. Get real-time pronunciation feedback and progress tracking."
+                        howItWorks={[
+                          'Select your target language and difficulty level',
+                          'Choose a scenario (restaurant, travel, shopping, etc.)',
+                          'Practice conversations in your chosen scenario',
+                          'Receive real-time feedback on pronunciation and grammar',
+                          'ElevenLabs provides natural voice examples and pronunciation guidance',
+                          'Track your progress and achievements',
+                          'Learn vocabulary and phrases specific to each scenario'
+                        ]}
+                        features={[
+                          'Multiple languages supported (Spanish, French, German, Italian, and more)',
+                          'Scenario-based learning (restaurant, travel, shopping, etc.)',
+                          'ElevenLabs text-to-speech for natural pronunciation examples',
+                          'Real-time pronunciation feedback',
+                          'Progress tracking and achievements',
+                          'Difficulty levels (Beginner, Intermediate, Advanced)',
+                          'Personalized learning paths'
+                        ]}
+                      />
+                    </div>
+                    <p className="header-subtitle">Practice languages with intelligent feedback and personalized scenarios</p>
+                  </div>
+                </div>
+              </div>
             </div>
+            <div className="learning-main-content">
+              <div className="left-panel">
+                <ScenarioSelector
+                  selectedScenario={selectedScenario}
+                  onSelectScenario={setSelectedScenario}
+                  selectedLanguage={selectedLanguage}
+                  onSelectLanguage={setSelectedLanguage}
+                  selectedDifficulty={selectedDifficulty}
+                  onSelectDifficulty={setSelectedDifficulty}
+                />
+                <VoiceConversation
+                  scenario={selectedScenario}
+                  onFeedback={setCurrentFeedback}
+                  mode="learning"
+                  targetLanguage={selectedLanguage}
+                  difficulty={selectedDifficulty}
+                />
+              </div>
 
-            <div className="right-panel">
-              <FeedbackPanel feedback={currentFeedback} targetLanguage={selectedLanguage} />
-              <ProgressTracker />
+              <div className="right-panel">
+                <FeedbackPanel feedback={currentFeedback} targetLanguage={selectedLanguage} />
+                <ProgressTracker />
+              </div>
             </div>
           </div>
         ) : (

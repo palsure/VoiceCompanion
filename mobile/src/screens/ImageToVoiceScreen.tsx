@@ -18,6 +18,7 @@ import { visionApi } from '../services/api'
 import { Audio } from 'expo-av'
 import { useAccessibility } from '../contexts/AccessibilityContext'
 import { useAccessibleScreen, useAccessibleButton } from '../hooks/useAccessibleButton'
+import FeatureInfoIcon from '../components/FeatureInfoIcon'
 
 type ImageToVoiceScreenNavigationProp = StackNavigationProp<RootStackParamList, 'ImageToVoice'>
 
@@ -284,6 +285,29 @@ const ImageToVoiceScreen = ({ navigation }: Props) => {
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+      <View style={styles.headerCard}>
+        <View style={styles.titleRow}>
+          <Text style={styles.title}>📸 Image to Voice</Text>
+          <FeatureInfoIcon
+            title="Image to Voice"
+            description="Turn an image into a detailed description that is read aloud."
+            howItWorks={[
+              'Take a photo or pick one from your gallery',
+              'AI analyzes the image and generates a narrative description',
+              'ElevenLabs text-to-speech converts it into natural voice audio',
+              'Listen to the voice or read the text',
+            ]}
+            features={[
+              'ElevenLabs-powered narration',
+              'Camera + gallery input',
+              'Automatic voice playback',
+            ]}
+          />
+        </View>
+        <Text style={styles.subtitleCard}>
+          Capture or upload an image to get a detailed voice description
+        </Text>
+      </View>
       <View style={styles.buttonSection}>
         <TouchableOpacity
           style={styles.cameraButton}
@@ -364,6 +388,32 @@ const styles = StyleSheet.create({
   },
   content: {
     padding: 20,
+  },
+  headerCard: {
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    padding: 18,
+    marginBottom: 16,
+    borderWidth: 2,
+    borderColor: '#e0e0e0',
+  },
+  titleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 10,
+    flexWrap: 'wrap',
+    marginBottom: 6,
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: '800',
+    color: '#1a1a1a',
+  },
+  subtitleCard: {
+    fontSize: 14,
+    color: '#666',
+    lineHeight: 20,
   },
   buttonSection: {
     marginBottom: 20,

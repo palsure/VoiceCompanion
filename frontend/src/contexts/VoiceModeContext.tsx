@@ -120,14 +120,14 @@ export const VoiceModeProvider: React.FC<VoiceModeProviderProps> = ({ children, 
   const [isWakeWordActive, setIsWakeWordActive] = useState(false)
   const recognitionRef = useRef<SpeechRecognition | null>(null)
   const synthesisRef = useRef<SpeechSynthesis | null>(null)
-  const commandTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+  const commandTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const lastListeningTimeRef = useRef<number>(0)
   const processingCommandRef = useRef<boolean>(false)
   const accumulatedTranscriptRef = useRef<string>('') // Use ref to persist across renders
   const wakeWordDetectedRef = useRef<boolean>(false)
   const commandStartTimeRef = useRef<number>(0)
   const isRecognitionStartingRef = useRef<boolean>(false) // Track if recognition is being started
-  const recognitionRestartTimeoutRef = useRef<NodeJS.Timeout | null>(null) // Track restart timeout
+  const recognitionRestartTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null) // Track restart timeout
 
   useEffect(() => {
     // Load from localStorage
@@ -1488,11 +1488,3 @@ export const useVoiceMode = (): VoiceModeContextType => {
   }
   return context
 }
-
-declare global {
-  interface Window {
-    SpeechRecognition: typeof SpeechRecognition
-    webkitSpeechRecognition: typeof SpeechRecognition
-  }
-}
-

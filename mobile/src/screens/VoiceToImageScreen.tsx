@@ -18,7 +18,8 @@ import * as FileSystem from 'expo-file-system/legacy'
 import * as MediaLibrary from 'expo-media-library'
 // Import EncodingType if available for type safety
 type FileSystemEncoding = 'utf8' | 'base64'
-import { imageGenerationApi, speechToTextApi } from '../services/api'
+import { imageGenerationApi, speechToTextApi, galleryApi } from '../services/api'
+import FeatureInfoIcon from '../components/FeatureInfoIcon'
 
 type VoiceToImageScreenNavigationProp = StackNavigationProp<RootStackParamList, 'VoiceToImage'>
 
@@ -27,6 +28,7 @@ interface Props {
 }
 
 const VoiceToImageScreen = ({ navigation }: Props) => {
+  const [activeTab, setActiveTab] = useState<'create' | 'gallery'>('create')
   const [prompt, setPrompt] = useState('')
   const [style, setStyle] = useState('realistic')
   const [loading, setLoading] = useState(false)
@@ -34,6 +36,8 @@ const VoiceToImageScreen = ({ navigation }: Props) => {
   const [isRecording, setIsRecording] = useState(false)
   const [recording, setRecording] = useState<Audio.Recording | null>(null)
   const [saving, setSaving] = useState(false)
+  const [savedArts, setSavedArts] = useState<Array<{ id: string; image: string; prompt: string; style: string; createdAt: number }>>([])
+  const [galleryLoading, setGalleryLoading] = useState(false)
 
   useEffect(() => {
     return () => {
@@ -42,6 +46,28 @@ const VoiceToImageScreen = ({ navigation }: Props) => {
       }
     }
   }, [recording])
+
+  const loadGallery = async () => {
+    try {
+      setGalleryLoading(true)
+      const resp: any = await galleryApi.list()
+      const arts = resp?.arts || resp?.data?.arts || []
+      setSavedArts(Array.isArray(arts) ? arts : [])
+    } catch (e) {
+      console.warn('Failed to load gallery from backend:', e)
+      setSavedArts([])
+    } finally {
+      setGalleryLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    // Load gallery once, and whenever switching to Gallery tab
+    if (activeTab === 'gallery') {
+      loadGallery()
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeTab])
 
   const startRecording = async () => {
     try {
@@ -285,8 +311,21 @@ const VoiceToImageScreen = ({ navigation }: Props) => {
       // Save to media library
       const asset = await MediaLibrary.createAssetAsync(imageUri)
       await MediaLibrary.createAlbumAsync('Voice to Art', asset, false)
-      
-      Alert.alert('Success', 'Image saved to gallery!')
+
+      // Save to backend gallery for cross-platform sync
+      try {
+        const resp: any = await galleryApi.save(generatedImage, prompt || 'Untitled', style)
+        if (resp?.art) {
+          setSavedArts((prev) => [resp.art, ...prev])
+        } else {
+          // refresh list if response shape differs
+          loadGallery()
+        }
+      } catch (e) {
+        console.warn('Backend gallery save failed:', e)
+      }
+
+      Alert.alert('Success', 'Image saved to My Gallery!')
     } catch (error: any) {
       console.error('Error saving image:', error)
       Alert.alert('Error', `Failed to save image: ${error.message}`)
@@ -295,102 +334,203 @@ const VoiceToImageScreen = ({ navigation }: Props) => {
     }
   }
 
+  const handleSelectArt = (art: { id: string; image: string; prompt: string; style: string }) => {
+    setPrompt(art.prompt || '')
+    setStyle(art.style || 'realistic')
+    setGeneratedImage(art.image)
+    setActiveTab('create')
+  }
+
+  const handleDeleteArt = async (id: string) => {
+    Alert.alert('Delete Art?', 'Remove this item from My Gallery?', [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Delete',
+        style: 'destructive',
+        onPress: async () => {
+          try {
+            await galleryApi.delete(id)
+            setSavedArts((prev) => prev.filter((a) => a.id !== id))
+          } catch (e: any) {
+            Alert.alert('Error', e?.message || 'Failed to delete')
+          }
+        },
+      },
+    ])
+  }
+
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      <View style={styles.inputSection}>
-        <View style={styles.inputHeader}>
-          <Text style={styles.label}>Describe your art:</Text>
-          <TouchableOpacity
-            style={[styles.voiceButton, isRecording && styles.voiceButtonActive]}
-            onPress={isRecording ? stopRecording : startRecording}
-          >
-            <Text style={styles.voiceButtonText}>
-              {isRecording ? '⏹ Stop Recording' : '🎤 Voice Input'}
-            </Text>
-          </TouchableOpacity>
-        </View>
-        <TextInput
-          style={styles.textInput}
-          placeholder="e.g., A serene sunset over mountains with purple and orange skies"
-          value={prompt}
-          onChangeText={setPrompt}
-          multiline
-          numberOfLines={4}
-          textAlignVertical="top"
-        />
-        {isRecording && (
-          <View style={styles.recordingIndicator}>
-            <View style={styles.recordingDot} />
-            <Text style={styles.recordingText}>Recording... Speak your description</Text>
-          </View>
-        )}
-      </View>
-
-      <View style={styles.styleSection}>
-        <Text style={styles.label}>Style:</Text>
-        <View style={styles.styleButtons}>
-          {['realistic', 'artistic', 'cartoon', 'abstract', 'photographic'].map((s) => (
-            <TouchableOpacity
-              key={s}
-              style={[styles.styleButton, style === s && styles.styleButtonActive]}
-              onPress={() => setStyle(s)}
-            >
-              <Text style={[styles.styleButtonText, style === s && styles.styleButtonTextActive]}>
-                {s.charAt(0).toUpperCase() + s.slice(1)}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-      </View>
-
-      <TouchableOpacity
-        style={[styles.generateButton, (loading || !prompt.trim()) && styles.generateButtonDisabled]}
-        onPress={handleGenerate}
-        disabled={loading || !prompt.trim()}
-      >
-        {loading ? (
-          <ActivityIndicator color="#fff" />
-        ) : (
-          <Text style={styles.generateButtonText}>✨ Create Art</Text>
-        )}
-      </TouchableOpacity>
-
-      {generatedImage && (
-        <View style={styles.imageSection}>
-          <View style={styles.imageHeader}>
-            <Text style={styles.resultTitle}>Generated Image:</Text>
-            <TouchableOpacity
-              style={[styles.saveButton, saving && styles.saveButtonDisabled]}
-              onPress={handleSaveToGallery}
-              disabled={saving}
-            >
-              {saving ? (
-                <ActivityIndicator color="#667eea" size="small" />
-              ) : (
-                <Text style={styles.saveButtonText}>💾 Save to Gallery</Text>
-              )}
-            </TouchableOpacity>
-          </View>
-          <Image 
-            source={{ uri: generatedImage }} 
-            style={styles.generatedImage}
-            resizeMode="contain"
-            onError={(error) => {
-              console.error('Image load error:', error.nativeEvent?.error || error)
-              // Don't show alert for placeholder images - they're expected fallbacks
-              if (!generatedImage.includes('placeholder') && !generatedImage.includes('data:image/svg')) {
-                Alert.alert('Error', 'Failed to load image. Please try generating again.')
-              }
-            }}
+      <View style={styles.header}>
+        <View style={styles.titleRow}>
+          <Text style={styles.title}>🎨 Voice to Art</Text>
+          <FeatureInfoIcon
+            title="Voice to Art"
+            description="Describe what you want to see and generate art with AI."
+            howItWorks={[
+              'Speak or type a prompt',
+              'Choose an art style',
+              'Generate using Google Imagen',
+              'Save to your device gallery',
+            ]}
+            features={[
+              'Voice input + transcription',
+              'Multiple styles',
+              'Save to gallery',
+              'ElevenLabs integration for voice interactions',
+            ]}
           />
         </View>
-      )}
-
-      <View style={styles.infoBox}>
-        <Text style={styles.infoText}>
-          💡 Tip: Be descriptive! Include details about colors, mood, composition, and style for best results.
-        </Text>
+        <Text style={styles.subtitle}>Describe what you want to see, and we’ll create it</Text>
       </View>
+
+      <View style={styles.tabs}>
+        <TouchableOpacity
+          style={[styles.tabButton, activeTab === 'create' && styles.tabButtonActive]}
+          onPress={() => setActiveTab('create')}
+        >
+          <Text style={[styles.tabText, activeTab === 'create' && styles.tabTextActive]}>Create Art</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.tabButton, activeTab === 'gallery' && styles.tabButtonActive]}
+          onPress={() => setActiveTab('gallery')}
+        >
+          <Text style={[styles.tabText, activeTab === 'gallery' && styles.tabTextActive]}>
+            My Gallery ({savedArts.length})
+          </Text>
+        </TouchableOpacity>
+      </View>
+
+      {activeTab === 'gallery' ? (
+        <View style={styles.gallerySection}>
+          {galleryLoading ? (
+            <View style={styles.galleryLoading}>
+              <ActivityIndicator />
+              <Text style={styles.galleryLoadingText}>Loading gallery…</Text>
+            </View>
+          ) : savedArts.length === 0 ? (
+            <View style={styles.emptyGallery}>
+              <Text style={styles.emptyTitle}>No saved art yet</Text>
+              <Text style={styles.emptyText}>Create an image and tap “Save to Gallery”.</Text>
+            </View>
+          ) : (
+            <View style={styles.galleryGrid}>
+              {savedArts.map((art) => (
+                <View key={art.id} style={styles.galleryItem}>
+                  <TouchableOpacity onPress={() => handleSelectArt(art)} activeOpacity={0.85}>
+                    <Image source={{ uri: art.image }} style={styles.galleryImage} />
+                  </TouchableOpacity>
+                  <Text style={styles.galleryPrompt} numberOfLines={2}>
+                    {art.prompt || 'Untitled'}
+                  </Text>
+                  <View style={styles.galleryActions}>
+                    <TouchableOpacity style={styles.useButton} onPress={() => handleSelectArt(art)}>
+                      <Text style={styles.useButtonText}>Use</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity style={styles.deleteButton} onPress={() => handleDeleteArt(art.id)}>
+                      <Text style={styles.deleteButtonText}>Delete</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              ))}
+            </View>
+          )}
+        </View>
+      ) : null}
+
+      {activeTab === 'create' && (
+        <>
+          <View style={styles.inputSection}>
+            <View style={styles.inputHeader}>
+              <Text style={styles.label}>Describe your art:</Text>
+              <TouchableOpacity
+                style={[styles.voiceButton, isRecording && styles.voiceButtonActive]}
+                onPress={isRecording ? stopRecording : startRecording}
+              >
+                <Text style={styles.voiceButtonText}>
+                  {isRecording ? '⏹ Stop Recording' : '🎤 Voice Input'}
+                </Text>
+              </TouchableOpacity>
+            </View>
+            <TextInput
+              style={styles.textInput}
+              placeholder="e.g., A serene sunset over mountains with purple and orange skies"
+              value={prompt}
+              onChangeText={setPrompt}
+              multiline
+              numberOfLines={4}
+              textAlignVertical="top"
+            />
+            {isRecording && (
+              <View style={styles.recordingIndicator}>
+                <View style={styles.recordingDot} />
+                <Text style={styles.recordingText}>Recording... Speak your description</Text>
+              </View>
+            )}
+          </View>
+
+          <View style={styles.styleSection}>
+            <Text style={styles.label}>Style:</Text>
+            <View style={styles.styleButtons}>
+              {['realistic', 'artistic', 'cartoon', 'abstract', 'photographic'].map((s) => (
+                <TouchableOpacity
+                  key={s}
+                  style={[styles.styleButton, style === s && styles.styleButtonActive]}
+                  onPress={() => setStyle(s)}
+                >
+                  <Text style={[styles.styleButtonText, style === s && styles.styleButtonTextActive]}>
+                    {s.charAt(0).toUpperCase() + s.slice(1)}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
+
+          <TouchableOpacity
+            style={[styles.generateButton, (loading || !prompt.trim()) && styles.generateButtonDisabled]}
+            onPress={handleGenerate}
+            disabled={loading || !prompt.trim()}
+          >
+            {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.generateButtonText}>✨ Create Art</Text>}
+          </TouchableOpacity>
+
+          {generatedImage && (
+            <View style={styles.imageSection}>
+              <View style={styles.imageHeader}>
+                <Text style={styles.resultTitle}>Generated Image:</Text>
+                <TouchableOpacity
+                  style={[styles.saveButton, saving && styles.saveButtonDisabled]}
+                  onPress={handleSaveToGallery}
+                  disabled={saving}
+                >
+                  {saving ? (
+                    <ActivityIndicator color="#667eea" size="small" />
+                  ) : (
+                    <Text style={styles.saveButtonText}>💾 Save to Gallery</Text>
+                  )}
+                </TouchableOpacity>
+              </View>
+              <Image
+                source={{ uri: generatedImage }}
+                style={styles.generatedImage}
+                resizeMode="contain"
+                onError={(error) => {
+                  console.error('Image load error:', error.nativeEvent?.error || error)
+                  if (!generatedImage.includes('placeholder') && !generatedImage.includes('data:image/svg')) {
+                    Alert.alert('Error', 'Failed to load image. Please try generating again.')
+                  }
+                }}
+              />
+            </View>
+          )}
+
+          <View style={styles.infoBox}>
+            <Text style={styles.infoText}>
+              💡 Tip: Be descriptive! Include details about colors, mood, composition, and style for best results.
+            </Text>
+          </View>
+        </>
+      )}
     </ScrollView>
   )
 }
@@ -404,15 +544,93 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   header: {
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    padding: 18,
+    marginBottom: 16,
+    borderWidth: 2,
+    borderColor: '#e0e0e0',
+  },
+  titleRow: {
+    flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 24,
+    justifyContent: 'space-between',
+    gap: 10,
+    flexWrap: 'wrap',
+    marginBottom: 6,
   },
   title: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 8,
+    fontSize: 24,
+    fontWeight: '800',
+    color: '#1a1a1a',
   },
+  subtitle: {
+    fontSize: 14,
+    color: '#666',
+    lineHeight: 20,
+  },
+  tabs: {
+    flexDirection: 'row',
+    gap: 10,
+    marginBottom: 14,
+  },
+  tabButton: {
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+    borderRadius: 999,
+    backgroundColor: '#fff',
+    borderWidth: 2,
+    borderColor: '#e0e0e0',
+  },
+  tabButtonActive: {
+    borderColor: '#667eea',
+    backgroundColor: '#f4f7ff',
+  },
+  tabText: { fontSize: 13, fontWeight: '800', color: '#666' },
+  tabTextActive: { color: '#667eea' },
+  gallerySection: {
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: '#e9e9e9',
+    marginBottom: 16,
+  },
+  galleryLoading: { alignItems: 'center', paddingVertical: 20, gap: 8 },
+  galleryLoadingText: { color: '#666' },
+  emptyGallery: { alignItems: 'center', paddingVertical: 24 },
+  emptyTitle: { fontSize: 16, fontWeight: '900', color: '#333', marginBottom: 6 },
+  emptyText: { fontSize: 13, color: '#666', textAlign: 'center' },
+  galleryGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12, justifyContent: 'space-between' },
+  galleryItem: {
+    width: '48%',
+    borderWidth: 1,
+    borderColor: '#eee',
+    borderRadius: 14,
+    padding: 10,
+    backgroundColor: '#fff',
+  },
+  galleryImage: { width: '100%', height: 140, borderRadius: 10, backgroundColor: '#f2f2f2' },
+  galleryPrompt: { marginTop: 8, fontSize: 12, fontWeight: '700', color: '#333' },
+  galleryActions: { flexDirection: 'row', gap: 8, marginTop: 10 },
+  useButton: {
+    flex: 1,
+    paddingVertical: 8,
+    borderRadius: 10,
+    backgroundColor: '#4caf50',
+    alignItems: 'center',
+  },
+  useButtonText: { color: '#fff', fontWeight: '900', fontSize: 12 },
+  deleteButton: {
+    flex: 1,
+    paddingVertical: 8,
+    borderRadius: 10,
+    backgroundColor: '#f5f5f5',
+    borderWidth: 1,
+    borderColor: '#ddd',
+    alignItems: 'center',
+  },
+  deleteButtonText: { color: '#555', fontWeight: '900', fontSize: 12 },
   inputSection: {
     marginBottom: 20,
   },

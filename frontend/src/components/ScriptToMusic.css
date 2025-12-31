@@ -11,7 +11,7 @@
 
 .section-header {
   margin-bottom: 1.5rem;
-  padding-bottom: 1rem;
+  padding-bottom: 0.5rem;
   border-bottom: 3px solid #e0e0e0;
 }
 
@@ -22,19 +22,36 @@
 }
 
 .header-icon {
-  font-size: 3rem;
+  font-size: 4rem;
   flex-shrink: 0;
+  animation: float 3s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px) rotate(-5deg);
+  }
+  50% {
+    transform: translateY(-10px) rotate(5deg);
+  }
 }
 
 .header-text {
   flex: 1;
 }
 
+.header-title-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.25rem;
+}
+
 .header-title {
   font-size: 2rem;
   font-weight: 700;
   color: #1a1a1a;
-  margin: 0 0 0.25rem 0;
+  margin: 0;
   background: linear-gradient(135deg, #e91e63 0%, #ff6b9d 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -47,6 +64,37 @@
   margin: 0;
   line-height: 1.4;
   font-weight: 400;
+  padding-bottom: 0.5rem;
+}
+
+.tabs-container {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 2rem;
+  border-bottom: none;
+}
+
+.tab-button {
+  background: none;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #666;
+  cursor: pointer;
+  border-bottom: 3px solid transparent;
+  transition: all 0.3s ease;
+  position: relative;
+  top: 2px;
+}
+
+.tab-button:hover {
+  color: #e91e63;
+}
+
+.tab-button.active {
+  color: #e91e63;
+  border-bottom-color: #e91e63;
 }
 
 .input-section {
@@ -317,6 +365,7 @@
 }
 
 .play-button,
+.save-button,
 .download-button {
   padding: 0.875rem 2rem;
   border: none;
@@ -326,6 +375,16 @@
   cursor: pointer;
   transition: all 0.3s ease;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.save-button {
+  background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);
+  color: white;
+}
+
+.save-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(255, 152, 0, 0.3);
 }
 
 .play-button {
@@ -348,6 +407,137 @@
   box-shadow: 0 6px 16px rgba(33, 150, 243, 0.3);
 }
 
+.music-gallery {
+  margin-top: 1rem;
+}
+
+.empty-gallery {
+  text-align: center;
+  padding: 4rem 2rem;
+  color: #666;
+}
+
+.empty-gallery p {
+  margin: 0.5rem 0;
+  font-size: 1.1rem;
+}
+
+.music-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1.5rem;
+  margin-top: 1rem;
+}
+
+.music-item {
+  background: white;
+  border: 2px solid #e0e0e0;
+  border-radius: 12px;
+  padding: 1.5rem;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.music-item:hover {
+  border-color: #e91e63;
+  box-shadow: 0 4px 16px rgba(233, 30, 99, 0.15);
+  transform: translateY(-2px);
+}
+
+.music-item-header {
+  margin-bottom: 1rem;
+}
+
+.music-item-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #333;
+  margin: 0 0 0.75rem 0;
+  line-height: 1.4;
+}
+
+.music-item-meta {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.music-style-badge,
+.music-length-badge {
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.music-style-badge {
+  background: linear-gradient(135deg, #e91e63 0%, #ff6b9d 100%);
+  color: white;
+}
+
+.music-length-badge {
+  background: #f5f5f5;
+  color: #666;
+}
+
+.music-item-controls {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.play-button-small,
+.download-button-small,
+.delete-button-small {
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  flex: 1;
+  min-width: 80px;
+}
+
+.play-button-small {
+  background: linear-gradient(135deg, #4caf50 0%, #45a049 100%);
+  color: white;
+}
+
+.play-button-small:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(76, 175, 80, 0.3);
+}
+
+.download-button-small {
+  background: linear-gradient(135deg, #2196f3 0%, #1976d2 100%);
+  color: white;
+}
+
+.download-button-small:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(33, 150, 243, 0.3);
+}
+
+.delete-button-small {
+  background: #f5f5f5;
+  color: #666;
+}
+
+.delete-button-small:hover {
+  background: #ff4444;
+  color: white;
+  transform: translateY(-1px);
+}
+
+.music-item-date {
+  font-size: 0.85rem;
+  color: #999;
+  margin-top: 0.5rem;
+}
+
 @media (max-width: 768px) {
   .script-to-music {
     padding: 1.5rem;
@@ -362,8 +552,13 @@
   }
   
   .play-button,
+  .save-button,
   .download-button {
     width: 100%;
+  }
+
+  .music-list {
+    grid-template-columns: 1fr;
   }
 }
 
