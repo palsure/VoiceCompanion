@@ -86,6 +86,53 @@ async function generateImageFallback(prompt: string): Promise<string | null> {
   return null
 }
 
+/**
+ * @swagger
+ * /api/image-generation/generate:
+ *   post:
+ *     summary: Generate image from text/voice description
+ *     description: |
+ *       Generates images from text prompts using Google Imagen API with fallback to Hugging Face models.
+ *       Supports various art styles and sizes.
+ *     tags: [Image Generation]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - prompt
+ *             properties:
+ *               prompt:
+ *                 type: string
+ *                 description: Text description of the image to generate
+ *                 example: "A beautiful sunset over mountains"
+ *               style:
+ *                 type: string
+ *                 description: Art style (realistic, artistic, cartoon, abstract, photographic)
+ *                 enum: [realistic, artistic, cartoon, abstract, photographic]
+ *               size:
+ *                 type: string
+ *                 description: Image size
+ *                 default: "1024x1024"
+ *     responses:
+ *       200:
+ *         description: Image generated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 image:
+ *                   type: string
+ *                   format: base64
+ *                   description: Base64 encoded image data
+ *       400:
+ *         description: Invalid request
+ *       500:
+ *         description: Server error
+ */
 router.post('/generate', async (req, res) => {
   try {
     const { prompt, style, size } = req.body

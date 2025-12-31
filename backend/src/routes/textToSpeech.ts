@@ -4,8 +4,39 @@ import { elevenLabsService } from '../services/elevenLabsService.js'
 const router = express.Router()
 
 /**
- * Generate speech from text using ElevenLabs
- * POST /api/text-to-speech/generate
+ * @swagger
+ * /api/text-to-speech/generate:
+ *   post:
+ *     summary: Generate speech from text using ElevenLabs
+ *     tags: [Text-to-Speech]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - text
+ *             properties:
+ *               text:
+ *                 type: string
+ *                 description: Text to convert to speech
+ *                 example: "Hello, this is a test of text to speech."
+ *               voiceId:
+ *                 type: string
+ *                 description: ElevenLabs voice ID (optional)
+ *     responses:
+ *       200:
+ *         description: Audio generated successfully
+ *         content:
+ *           audio/mpeg:
+ *             schema:
+ *               type: string
+ *               format: binary
+ *       400:
+ *         description: Invalid request
+ *       500:
+ *         description: Server error
  */
 router.post('/generate', async (req, res) => {
   try {

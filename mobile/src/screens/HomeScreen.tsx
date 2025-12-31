@@ -24,11 +24,24 @@ const HomeScreen = ({ navigation }: Props) => {
   console.log('HomeScreen rendering...')
   const { isEnabled, toggle } = useAccessibility()
   const { isVoiceModeEnabled, toggleVoiceMode, isWakeWordActive } = useVoiceMode()
+  const unifiedVoiceEnabled = isVoiceModeEnabled || isEnabled
+
+  const toggleUnifiedVoice = () => {
+    const next = !unifiedVoiceEnabled
+
+    // Sync Accessibility (voice descriptions) with Voice Mode so there's only one toggle in UI.
+    if (next && !isEnabled) toggle()
+    if (!next && isEnabled) toggle()
+
+    // Sync wake-word Voice Mode with the same toggle.
+    if (next && !isVoiceModeEnabled) toggleVoiceMode()
+    if (!next && isVoiceModeEnabled) toggleVoiceMode()
+  }
   
   // Announce screen when accessibility is enabled
   useAccessibleScreen(
     'VoiceCompanion Home',
-    'Your Intelligent Voice Assistant for Accessibility and Learning. Use the accessibility toggle at the top to enable voice descriptions.'
+    'Your Intelligent Voice Assistant for Accessibility and Learning. Use Voice Mode to enable voice navigation and voice descriptions.'
   )
 
   const learningButtonProps = useAccessibleButton({
@@ -61,30 +74,32 @@ const HomeScreen = ({ navigation }: Props) => {
     onPress: () => navigation.navigate('VoiceGuidedShopping'),
   })
 
+  const musicButtonProps = useAccessibleButton({
+    label: 'Script to Music',
+    description: 'Convert lyrics or a script into music',
+    onPress: () => navigation.navigate('ScriptToMusic'),
+  })
+
+  const aboutButtonProps = useAccessibleButton({
+    label: 'About',
+    description: 'Learn about VoiceCompanion and how it works',
+    onPress: () => navigation.navigate('About'),
+  })
+
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       {/* Accessibility & Voice Mode Toggles */}
       <View style={styles.togglesContainer}>
-        <View style={styles.accessibilityToggleContainer}>
-          <Text style={styles.accessibilityLabel}>🔊 Voice Descriptions</Text>
-          <Switch
-            value={isEnabled}
-            onValueChange={toggle}
-            trackColor={{ false: '#767577', true: '#667eea' }}
-            thumbColor={isEnabled ? '#fff' : '#f4f3f4'}
-          />
-        </View>
-        
         <View style={styles.voiceModeToggleContainer}>
           <Text style={styles.voiceModeLabel}>
             🎙️ Voice Mode {isWakeWordActive ? '(Listening...)' : ''}
           </Text>
           <Switch
-            value={isVoiceModeEnabled}
-            onValueChange={toggleVoiceMode}
+            value={unifiedVoiceEnabled}
+            onValueChange={toggleUnifiedVoice}
             trackColor={{ false: '#767577', true: '#4caf50' }}
-            thumbColor={isVoiceModeEnabled ? '#fff' : '#f4f3f4'}
+            thumbColor={unifiedVoiceEnabled ? '#fff' : '#f4f3f4'}
           />
         </View>
       </View>
@@ -158,6 +173,30 @@ const HomeScreen = ({ navigation }: Props) => {
               <Text style={styles.progressButtonTextInline}>📊 View Your Progress</Text>
             </TouchableOpacity>
           </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.featureCard, styles.musicCard]}
+            {...musicButtonProps}
+            activeOpacity={0.8}
+          >
+            <Text style={styles.featureIcon}>🎵</Text>
+            <Text style={styles.featureTitle}>Script to Music</Text>
+            <Text style={styles.featureDescription}>
+              Turn lyrics into music and save tracks
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.featureCard, styles.aboutCard]}
+            {...aboutButtonProps}
+            activeOpacity={0.8}
+          >
+            <Text style={styles.featureIcon}>👁️</Text>
+            <Text style={styles.featureTitle}>About</Text>
+            <Text style={styles.featureDescription}>
+              Learn how VoiceCompanion works
+            </Text>
+          </TouchableOpacity>
         </View>
       </View>
     </ScrollView>
@@ -181,24 +220,6 @@ const styles = StyleSheet.create({
   togglesContainer: {
     marginBottom: 20,
     gap: 12,
-  },
-  accessibilityToggleContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    backgroundColor: '#fff',
-    padding: 16,
-    borderRadius: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  accessibilityLabel: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#333',
   },
   voiceModeToggleContainer: {
     flexDirection: 'row',
@@ -274,6 +295,12 @@ const styles = StyleSheet.create({
   },
   shoppingCard: {
     borderLeftColor: '#ff9800',
+  },
+  musicCard: {
+    borderLeftColor: '#e91e63',
+  },
+  aboutCard: {
+    borderLeftColor: '#2196f3',
   },
   featureIcon: {
     fontSize: 32,

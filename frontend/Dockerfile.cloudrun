@@ -1,0 +1,34 @@
+FROM node:18-alpine as build
+
+WORKDIR /app
+
+COPY package*.json ./
+COPY tsconfig*.json ./
+COPY vite.config.ts ./
+
+RUN npm install
+
+COPY src ./src
+COPY index.html ./
+
+RUN npm run build
+
+FROM nginx:alpine
+
+# Install gettext for envsubst
+RUN apk add --no-cache gettext
+
+COPY --from=build /app/dist /usr/share/nginx/html
+COPY nginx.cloudrun.conf /etc/nginx/templates/default.conf.template
+COPY start-nginx.sh /start-nginx.sh
+
+# Make startup script executable
+RUN chmod +x /start-nginx.sh
+
+# Cloud Run expects the container to listen on $PORT (defaults to 8080)
+EXPOSE 8080
+
+# Use the startup script
+CMD ["/start-nginx.sh"]
+
+

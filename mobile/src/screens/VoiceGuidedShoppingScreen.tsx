@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import {
   View,
   Text,
@@ -14,6 +14,7 @@ import { RootStackParamList } from '../../App'
 import CameraCapture from '../components/CameraCapture'
 import * as Speech from 'expo-speech'
 import { shoppingApi } from '../services/api'
+import FeatureInfoIcon from '../components/FeatureInfoIcon'
 
 type VoiceGuidedShoppingScreenNavigationProp = StackNavigationProp<RootStackParamList, 'VoiceGuidedShopping'>
 
@@ -23,17 +24,59 @@ interface Props {
 
 const VoiceGuidedShoppingScreen = ({ navigation }: Props) => {
   const [cameraActive, setCameraActive] = useState(false)
+  const [simulationActive, setSimulationActive] = useState(false)
   const [capturedImage, setCapturedImage] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [question, setQuestion] = useState('')
   const [productInfo, setProductInfo] = useState<any>(null)
   const [assistance, setAssistance] = useState<string | null>(null)
   const [isSpeaking, setIsSpeaking] = useState(false)
+  const [currentSimulationProduct, setCurrentSimulationProduct] = useState(0)
   const [shoppingHistory, setShoppingHistory] = useState<Array<{
     product: string
     info: any
     assistance: string
   }>>([])
+
+  const simulationIntervalRef = useRef<NodeJS.Timeout | null>(null)
+
+  const SIMULATION_PRODUCTS = [
+    {
+      name: 'Organic Coffee Beans',
+      image: 'https://images.unsplash.com/photo-1559056199-641a0ac8b55e?w=600',
+      productInfo: { description: 'Premium organic coffee beans', price: '$24.99', brand: 'Colombian Gold' },
+      assistance:
+        'This is a premium organic coffee product. The price is $24.99 for a 12oz bag. It contains 100% Arabica coffee beans and is organic certified.',
+    },
+    {
+      name: 'Fresh Avocados',
+      image: 'https://images.unsplash.com/photo-1523049673857-eb18f1d7b578?w=600',
+      productInfo: { description: 'Fresh Hass avocados', price: '$2.99 each', brand: 'Fresh Farm' },
+      assistance:
+        'These are fresh Hass avocados, priced at $2.99 each. They appear ripe and ready to eat. Perfect for toast or guacamole.',
+    },
+    {
+      name: 'Organic Honey',
+      image: 'https://images.unsplash.com/photo-1587049352846-4a222e784d38?w=600',
+      productInfo: { description: 'Pure organic wildflower honey', price: '$12.99', brand: "Nature's Best" },
+      assistance:
+        "This is pure organic wildflower honey, priced at $12.99 for a 16oz jar. It's 100% pure with no additives. Great natural sweetener.",
+    },
+    {
+      name: 'Whole Grain Bread',
+      image: 'https://images.unsplash.com/photo-1509440159596-0249088772ff?w=600',
+      productInfo: { description: 'Fresh baked whole grain bread', price: '$4.99', brand: 'Bakery Fresh' },
+      assistance:
+        "This is whole grain bread, priced at $4.99. It's a healthy option with fiber and nutrients—great for sandwiches and toast.",
+    },
+  ]
+
+  useEffect(() => {
+    return () => {
+      if (simulationIntervalRef.current) clearInterval(simulationIntervalRef.current)
+      Speech.stop()
+    }
+  }, [])
 
   const handleImageCapture = (imageData: string | null) => {
     setCapturedImage(imageData)
@@ -102,6 +145,48 @@ const VoiceGuidedShoppingScreen = ({ navigation }: Props) => {
     setIsSpeaking(false)
   }
 
+  const loadSimulationProduct = (index: number) => {
+    const item = SIMULATION_PRODUCTS[index]
+    if (!item) return
+    setCapturedImage(item.image)
+    setProductInfo(item.productInfo)
+    setAssistance(item.assistance)
+    setQuestion('')
+    setShoppingHistory((prev) => [
+      { product: item.productInfo.description || 'Product', info: item.productInfo, assistance: item.assistance },
+      ...prev.slice(0, 4),
+    ])
+    setTimeout(() => handleSpeakAssistance(item.assistance), 500)
+  }
+
+  const handleStartSimulation = () => {
+    setSimulationActive(true)
+    setCameraActive(false)
+    setCurrentSimulationProduct(0)
+    loadSimulationProduct(0)
+    simulationIntervalRef.current = setInterval(() => {
+      setCurrentSimulationProduct((prev) => {
+        const next = (prev + 1) % SIMULATION_PRODUCTS.length
+        loadSimulationProduct(next)
+        return next
+      })
+    }, 8000)
+  }
+
+  const handleStopSimulation = () => {
+    setSimulationActive(false)
+    if (simulationIntervalRef.current) {
+      clearInterval(simulationIntervalRef.current)
+      simulationIntervalRef.current = null
+    }
+    setCapturedImage(null)
+    setProductInfo(null)
+    setAssistance(null)
+    setQuestion('')
+    Speech.stop()
+    setIsSpeaking(false)
+  }
+
   const quickQuestions = [
     'What is this product?',
     'What is the price?',
@@ -113,17 +198,60 @@ const VoiceGuidedShoppingScreen = ({ navigation }: Props) => {
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       <View style={styles.header}>
-        <Text style={styles.title}>🛒 Voice Guided Shopping</Text>
+        <View style={styles.titleRow}>
+          <Text style={styles.title}>🛒 Voice Guided Shopping</Text>
+          <FeatureInfoIcon
+            title="Voice Guided Shopping"
+            description="Capture products and get intelligent shopping assistance through voice."
+            howItWorks={[
+              'Use camera to capture a product (or start Simulation to demo)',
+              'AI extracts product details and answers questions (price, ingredients, comparisons)',
+              'ElevenLabs text-to-speech reads the assistance aloud',
+              'Review recent items in Shopping History',
+            ]}
+            features={[
+              'ElevenLabs-powered voice narration',
+              'Quick question buttons',
+              'Simulation mode for demos',
+              'Shopping history',
+            ]}
+          />
+        </View>
         <Text style={styles.subtitle}>
           Capture products and get detailed voice descriptions, prices, and shopping assistance
         </Text>
       </View>
 
-      <CameraCapture
-        active={cameraActive}
-        onToggle={setCameraActive}
-        onImageCapture={handleImageCapture}
-      />
+      <View style={styles.controlsRow}>
+        <TouchableOpacity
+          style={[styles.simButton, simulationActive && styles.simButtonActive]}
+          onPress={simulationActive ? handleStopSimulation : handleStartSimulation}
+          activeOpacity={0.85}
+        >
+          <Text style={styles.simButtonText}>
+            {simulationActive ? '⏹ Stop Simulation' : '🎬 Start Simulation'}
+          </Text>
+        </TouchableOpacity>
+      </View>
+
+      {!simulationActive && (
+        <CameraCapture
+          active={cameraActive}
+          onToggle={setCameraActive}
+          onImageCapture={handleImageCapture}
+          showPickImageButton={false}
+        />
+      )}
+
+      {simulationActive && (
+        <View style={styles.simInfo}>
+          <Text style={styles.simLabel}>🎬 Simulation Mode</Text>
+          <Text style={styles.simName}>
+            Product {currentSimulationProduct + 1} of {SIMULATION_PRODUCTS.length}:{' '}
+            {SIMULATION_PRODUCTS[currentSimulationProduct]?.name}
+          </Text>
+        </View>
+      )}
 
       {capturedImage && (
         <View style={styles.actionSection}>
@@ -273,6 +401,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 24,
   },
+  titleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 10,
+    flexWrap: 'wrap',
+  },
   title: {
     fontSize: 28,
     fontWeight: 'bold',
@@ -284,6 +419,47 @@ const styles = StyleSheet.create({
     color: '#666',
     textAlign: 'center',
     paddingHorizontal: 20,
+  },
+  controlsRow: {
+    marginBottom: 12,
+  },
+  simButton: {
+    backgroundColor: '#764ba2',
+    borderRadius: 12,
+    padding: 16,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  simButtonActive: {
+    backgroundColor: '#f44336',
+  },
+  simButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '700',
+  },
+  simInfo: {
+    backgroundColor: '#fff9e6',
+    borderRadius: 12,
+    padding: 16,
+    borderWidth: 2,
+    borderColor: '#ff9800',
+    marginBottom: 16,
+  },
+  simLabel: {
+    fontSize: 13,
+    fontWeight: '800',
+    color: '#ff9800',
+    marginBottom: 6,
+  },
+  simName: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#333',
   },
   actionSection: {
     marginBottom: 20,

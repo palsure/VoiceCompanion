@@ -74,9 +74,15 @@ const About = ({ onNavigate }: AboutProps) => {
   return (
     <div className="about-page">
       <div className="about-header">
-        <div className="about-icon">👁️</div>
-        <h1 className="about-title">About VoiceCompanion</h1>
-        <p className="about-subtitle">An intelligent, voice-driven assistant for accessibility and creativity</p>
+        <div className="header-content">
+          <div className="about-icon">👁️</div>
+          <div className="header-text">
+            <div className="header-title-row">
+              <h1 className="about-title">About VoiceCompanion</h1>
+            </div>
+            <p className="about-subtitle">An intelligent, voice-driven assistant for accessibility and creativity</p>
+          </div>
+        </div>
       </div>
 
       <div className="about-content">

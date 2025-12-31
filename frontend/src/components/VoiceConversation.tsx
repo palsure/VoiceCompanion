@@ -313,9 +313,4 @@ const VoiceConversation = ({
 
 export default VoiceConversation
 
-declare global {
-  interface Window {
-    SpeechRecognition: typeof SpeechRecognition
-    webkitSpeechRecognition: typeof SpeechRecognition
-  }
-}
+// Web Speech API typings are provided globally via `src/types/speech-recognition.d.ts`

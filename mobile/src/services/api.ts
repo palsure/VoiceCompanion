@@ -1,6 +1,6 @@
 import { Platform } from 'react-native'
-// Using relative path for now - can be switched to @voicecompanion/shared once package is installed
-import { createApiClient, createApiServices } from '../../../shared/src/api'
+// Use mobile-local API client (avoids Metro monorepo import issues).
+import { createApiClient, createApiServices } from './sharedApi'
 
 // Use environment variable if provided; otherwise pick sane defaults per platform.
 // - iOS simulator can reach your host machine via localhost
@@ -28,13 +28,10 @@ export const {
   visionApi,
   shoppingApi,
   speechToTextApi,
+  textToSpeechApi,
+  musicApi,
+  galleryApi,
 } = createApiServices(api)
-
-// Re-export types from shared module
-export type {
-  ConversationRequest,
-  ConversationResponse,
-} from '../../../shared/src/types'
 
 export default api
 

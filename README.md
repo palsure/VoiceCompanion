@@ -2,6 +2,18 @@
 
 **VoiceCompanion** - An intelligent, voice-driven assistant that combines accessibility support for visually impaired users with immersive language learning capabilities and creative AI features. Built with ElevenLabs for natural voice interaction, Google Cloud Gemini for intelligent understanding, and Google Imagen for image generation.
 
+## Table of Contents
+
+- [Overview](#overview)
+- [Features](#features)
+- [Architecture](#architecture)
+- [Tech Stack](#tech-stack)
+- [Quick Start](#quick-start)
+- [Project Structure](#project-structure)
+- [API Endpoints](#api-endpoints)
+- [Deployment](#deployment)
+- [Troubleshooting](#troubleshooting)
+
 ## Overview
 
 VoiceCompanion is a unified platform offering multiple powerful features:
@@ -23,6 +35,7 @@ VoiceCompanion is a unified platform offering multiple powerful features:
 - **Style Selection**: Choose from acoustic, electronic, classical, jazz, rock, or ambient styles
 - **Customizable Length**: Set music duration (30 seconds to 10 minutes)
 - **Voice Input**: Describe the music you want using voice commands
+- **Fallback Support**: Open-source music generation when ElevenLabs is unavailable
 
 ### 🧭 Real-Time Guidance
 - **Navigation Assistance**: Continuous voice guidance for safe navigation
@@ -34,6 +47,7 @@ VoiceCompanion is a unified platform offering multiple powerful features:
 - **Product Identification**: Identify products and read labels
 - **Shopping Assistance**: Get help comparing items and finding products
 - **Voice Interaction**: Ask questions about products using natural language
+- **Simulation Mode**: Practice shopping scenarios
 
 ### 👁️ Accessibility Mode
 - **Visual Assistance**: Camera-based scene description and object identification
@@ -56,26 +70,208 @@ VoiceCompanion is a unified platform offering multiple powerful features:
 - **Multimodal AI**: Combines voice and visual inputs for intelligent understanding
 - **Intelligent Understanding**: Google Cloud Gemini powers contextual understanding and helpful responses
 - **Image Generation**: Google Imagen for high-quality text-to-image generation
-- **Music Generation**: ElevenLabs Music API for converting text/lyrics to music
+- **Music Generation**: ElevenLabs Music API for converting text/lyrics to music with fallback support
 - **Accessible by Design**: High contrast mode, keyboard navigation, and screen reader support
 - **Real-Time Feedback**: Immediate corrections and suggestions for language learners
 - **Progress Tracking**: Monitor improvement with detailed analytics
-- **Gallery Management**: Save and organize generated artwork
-- **Cross-Platform**: Web and mobile (iOS & Android) support
+- **Gallery Management**: Save and organize generated artwork (cross-platform sync)
+- **Cross-Platform**: Web and mobile (iOS & Android) support with shared codebase
+
+## Architecture
+
+### System Architecture
+
+```mermaid
+graph TB
+    subgraph "Client Layer"
+        WEB[Web Frontend<br/>React + Vite]
+        MOBILE[Mobile App<br/>React Native + Expo]
+    end
+    
+    subgraph "Shared Module"
+        API[Shared API Client<br/>createApiClient<br/>createApiServices]
+    end
+    
+    subgraph "Backend Layer"
+        EXPRESS[Express Server<br/>Node.js + TypeScript]
+        
+        subgraph "API Routes"
+            ROUTES["/api/image-generation<br/>/api/music<br/>/api/gallery<br/>/api/vision<br/>/api/guidance<br/>/api/conversation"]
+        end
+        
+        subgraph "Services"
+            IMAGEN[imagenService]
+            ELEVEN[elevenLabsService]
+            GEMINI[geminiService]
+            VISION[visionService]
+        end
+    end
+    
+    subgraph "External Services"
+        GOOGLE[Google Cloud<br/>Imagen + Gemini + Vision]
+        ELEVENLABS[ElevenLabs<br/>TTS + STT + Music]
+    end
+    
+    WEB --> API
+    MOBILE --> API
+    API --> EXPRESS
+    EXPRESS --> ROUTES
+    ROUTES --> IMAGEN
+    ROUTES --> ELEVEN
+    ROUTES --> GEMINI
+    ROUTES --> VISION
+    IMAGEN --> GOOGLE
+    GEMINI --> GOOGLE
+    VISION --> GOOGLE
+    ELEVEN --> ELEVENLABS
+    
+    style WEB fill:#4a90e2
+    style MOBILE fill:#4a90e2
+    style EXPRESS fill:#50c878
+    style GOOGLE fill:#ea4335
+    style ELEVENLABS fill:#ff6b6b
+```
+
+### Data Flow Diagrams
+
+#### Voice to Art Flow
+
+```mermaid
+sequenceDiagram
+    participant User
+    participant Frontend
+    participant Backend
+    participant ElevenLabs
+    participant Imagen
+    
+    User->>Frontend: Voice/Text Input
+    Frontend->>ElevenLabs: Speech-to-Text
+    ElevenLabs-->>Frontend: Transcribed Text
+    Frontend->>Backend: POST /api/image-generation
+    Backend->>Imagen: Generate Image
+    Imagen-->>Backend: Base64 Image
+    Backend-->>Frontend: Image Response
+    Frontend->>Frontend: Display & Save to Gallery
+```
+
+#### Image to Voice Flow
+
+```mermaid
+sequenceDiagram
+    participant User
+    participant Frontend
+    participant Backend
+    participant Vision
+    participant Gemini
+    participant ElevenLabs
+    
+    User->>Frontend: Upload/Capture Image
+    Frontend->>Backend: POST /api/vision/analyze
+    Backend->>Vision: Analyze Image
+    Backend->>Gemini: Describe Scene
+    Vision-->>Backend: Text + Objects
+    Gemini-->>Backend: Narrative Description
+    Backend->>ElevenLabs: Text-to-Speech
+    ElevenLabs-->>Backend: Audio File
+    Backend-->>Frontend: Description + Audio
+    Frontend->>User: Play Audio Description
+```
+
+#### Script to Music Flow
+
+```mermaid
+sequenceDiagram
+    participant User
+    participant Frontend
+    participant Backend
+    participant ElevenLabs
+    
+    User->>Frontend: Lyrics/Description
+    Frontend->>Backend: POST /api/music/generate
+    Backend->>ElevenLabs: Generate Music
+    alt ElevenLabs Success
+        ElevenLabs-->>Backend: MP3 Audio
+    else ElevenLabs Failure
+        Backend->>Backend: Fallback Generation
+        Backend-->>Backend: Generated Audio
+    end
+    Backend-->>Frontend: Audio Response
+    Frontend->>User: Play/Download Music
+```
+
+### Deployment Architecture
+
+```mermaid
+graph TB
+    subgraph "Development"
+        DOCKER[Docker Compose]
+        BACKEND_DEV[Backend Container<br/>:5000]
+        FRONTEND_DEV[Frontend Container<br/>:3001]
+        DOCKER --> BACKEND_DEV
+        DOCKER --> FRONTEND_DEV
+    end
+    
+    subgraph "Production - Google Cloud Run"
+        GCR[Container Registry<br/>gcr.io]
+        BACKEND_PROD[voicecompanion-backend<br/>Cloud Run Service]
+        FRONTEND_PROD[voicecompanion-frontend<br/>Cloud Run Service<br/>nginx proxy]
+        GCR --> BACKEND_PROD
+        GCR --> FRONTEND_PROD
+        FRONTEND_PROD -->|/api/*| BACKEND_PROD
+    end
+    
+    USER[Users] --> FRONTEND_PROD
+    
+    style BACKEND_PROD fill:#4285f4
+    style FRONTEND_PROD fill:#4285f4
+    style GCR fill:#ea4335
+```
 
 ## Tech Stack
 
-- **Frontend**: React + TypeScript + Vite
-- **Mobile**: React Native + Expo (iOS & Android)
-- **Backend**: Node.js + Express + TypeScript
-- **Shared Module**: Common API services and types for web and mobile
-- **Voice**: ElevenLabs API (TTS, STT, Music Generation)
-- **AI**: Google Cloud Gemini 1.5 Pro
-- **Image Generation**: Google Imagen (Vertex AI)
-- **Vision**: Google Cloud Vision API
-- **Deployment**: Docker Compose for development, Google Cloud Run ready
+### Frontend
+- **React 18+**: UI framework
+- **TypeScript**: Type safety
+- **Vite**: Build tool and dev server
+- **React Router**: Client-side routing
+- **CSS Modules**: Component styling
 
-## Prerequisites
+### Mobile
+- **React Native**: Mobile framework
+- **Expo**: Development platform
+- **React Navigation**: Navigation library
+- **Expo AV**: Audio/video playback
+- **Expo Image Picker**: Image selection
+- **Expo Media Library**: Gallery access
+- **Expo Speech**: Text-to-speech
+
+### Backend
+- **Node.js**: Runtime
+- **Express**: Web framework
+- **TypeScript**: Type safety
+- **Axios**: HTTP client
+- **CORS**: Cross-origin support
+
+### Shared Module
+- **Axios**: HTTP client
+- **TypeScript**: Shared types
+- **Common API**: Unified interface for web and mobile
+
+### External Services
+- **ElevenLabs**: Voice synthesis, speech-to-text, music generation
+- **Google Cloud Gemini**: AI understanding and generation
+- **Google Imagen**: Image generation (Vertex AI)
+- **Google Vision API**: Image analysis
+
+### Deployment
+- **Docker Compose**: Development environment
+- **Google Cloud Run**: Production deployment (separate frontend/backend services)
+- **Container Registry (GCR)**: Docker image storage
+- **Nginx**: Frontend static file serving and API proxying
+
+## Quick Start
+
+### Prerequisites
 
 - Node.js 18+ and npm
 - Docker and Docker Compose (for development)
@@ -86,8 +282,6 @@ VoiceCompanion is a unified platform offering multiple powerful features:
   - Imagen API enabled (requires billing)
   - Vision API enabled (optional)
   - Application Default Credentials configured
-
-## Setup Instructions
 
 ### 1. Clone the Repository
 
@@ -145,7 +339,6 @@ The application will be available at:
 
 ### 5. Run Mobile App (Optional)
 
-**Terminal - Mobile:**
 ```bash
 cd mobile
 npm install
@@ -159,55 +352,60 @@ Then:
 
 See [mobile/MOBILE_SETUP.md](mobile/MOBILE_SETUP.md) for detailed mobile setup instructions.
 
-## Usage
+## Project Structure
 
-### Voice to Art
-
-1. Navigate to "Voice to Art" feature
-2. Describe your artwork using voice or text input
-3. Select an artistic style (optional)
-4. Click "Create Art" to generate
-5. Save to gallery for later viewing
-
-### Image to Voice
-
-1. Navigate to "Image to Voice" feature
-2. Upload an image, use camera, or select from gallery
-3. The system automatically describes the image
-4. Listen to the description in natural voice
-
-### Script to Music
-
-1. Navigate to "Script to Music" feature
-2. Enter lyrics or describe the music you want
-3. Select music style and duration
-4. Click "Generate Music" to create
-5. Play or download the generated music
-
-### Real-Time Guidance
-
-1. Navigate to "Real-Time Guidance" feature
-2. Start camera or use simulation mode
-3. Receive continuous voice guidance
-4. Get warnings about hazards and obstacles
-
-### Accessibility Mode
-
-1. Select "Accessibility" mode
-2. Enable camera to capture images
-3. Ask questions like:
-   - "What do you see?" - Describes the current camera view
-   - "Read this document" - Reads text from captured images
-   - "What is this product?" - Shopping assistance
-   - "How do I get to [location]?" - Navigation help
-
-### Language Learning Mode
-
-1. Select "Language Learning" mode
-2. Choose a scenario (Restaurant, Travel, Shopping, etc.)
-3. Start conversation and practice speaking
-4. Receive real-time feedback on grammar, vocabulary, and pronunciation
-5. Track your progress and get personalized recommendations
+```
+AI-Partner/
+├── frontend/              # React web frontend
+│   ├── src/
+│   │   ├── components/    # UI components
+│   │   │   ├── VoiceToArt.tsx
+│   │   │   ├── ImageToVoice.tsx
+│   │   │   ├── ScriptToMusic.tsx
+│   │   │   ├── RealTimeGuidance.tsx
+│   │   │   ├── VoiceGuidedShopping.tsx
+│   │   │   └── ...
+│   │   ├── hooks/         # Custom React hooks
+│   │   ├── contexts/      # React contexts (VoiceMode)
+│   │   └── services/      # API services
+│   ├── Dockerfile.cloudrun
+│   └── nginx.cloudrun.conf
+├── mobile/                # React Native mobile app
+│   ├── src/
+│   │   ├── screens/       # Screen components
+│   │   │   ├── VoiceToImageScreen.tsx
+│   │   │   ├── ImageToVoiceScreen.tsx
+│   │   │   ├── BlindGuidanceScreen.tsx
+│   │   │   └── ...
+│   │   ├── components/    # Reusable components
+│   │   ├── hooks/         # Custom hooks
+│   │   ├── contexts/      # React contexts
+│   │   └── services/      # API services
+├── backend/               # Express backend
+│   ├── src/
+│   │   ├── routes/        # API routes
+│   │   │   ├── imageGeneration.ts
+│   │   │   ├── music.ts
+│   │   │   ├── gallery.ts
+│   │   │   ├── vision.ts
+│   │   │   └── ...
+│   │   ├── services/      # Business logic
+│   │   │   ├── imagenService.ts
+│   │   │   ├── elevenLabsService.ts
+│   │   │   ├── geminiService.ts
+│   │   │   └── ...
+│   │   └── __tests__/     # Unit tests
+│   └── Dockerfile
+├── shared/                # Shared code between web and mobile
+│   ├── src/
+│   │   ├── api.ts         # Common API client
+│   │   └── types.ts        # Shared TypeScript types
+├── gcp/                   # Google Cloud deployment scripts
+│   ├── cloudbuild.yaml
+│   ├── deploy-to-cloudrun.sh
+│   └── ...
+└── README.md
+```
 
 ## API Endpoints
 
@@ -222,7 +420,7 @@ See [mobile/MOBILE_SETUP.md](mobile/MOBILE_SETUP.md) for detailed mobile setup i
 
 ### Vision
 - `POST /api/vision/analyze` - Analyze image (text + objects + description)
-- `POST /api/vision/describe` - Get narrative description of image
+- `POST /api/vision/text` - Extract text from image
 
 ### Music Generation
 - `POST /api/music/generate` - Generate music from text/lyrics
@@ -230,7 +428,6 @@ See [mobile/MOBILE_SETUP.md](mobile/MOBILE_SETUP.md) for detailed mobile setup i
 ### Gallery
 - `POST /api/gallery/save` - Save artwork to gallery
 - `GET /api/gallery/list` - List all saved artwork
-- `GET /api/gallery/:id` - Get specific artwork
 - `DELETE /api/gallery/:id` - Delete artwork
 
 ### Guidance
@@ -261,55 +458,71 @@ See [mobile/MOBILE_SETUP.md](mobile/MOBILE_SETUP.md) for detailed mobile setup i
 - `GET /api/personalization/difficulty` - Adaptive difficulty
 - `GET /api/personalization/recommendations` - Learning recommendations
 
-## Project Structure
+**API Documentation**: Access Swagger UI at `/docs` when backend is running.
 
-```
-AI-Partner/
-├── frontend/              # React web frontend
-│   ├── src/
-│   │   ├── components/    # UI components
-│   │   │   ├── VoiceToArt.tsx
-│   │   │   ├── ImageToVoice.tsx
-│   │   │   ├── ScriptToMusic.tsx
-│   │   │   ├── RealTimeGuidance.tsx
-│   │   │   ├── VoiceGuidedShopping.tsx
-│   │   │   └── ...
-│   │   ├── hooks/         # Custom React hooks
-│   │   └── services/      # API services
-├── mobile/                # React Native mobile app
-│   ├── src/
-│   │   ├── screens/       # Screen components
-│   │   │   ├── VoiceToImageScreen.tsx
-│   │   │   ├── ImageToVoiceScreen.tsx
-│   │   │   ├── BlindGuidanceScreen.tsx
-│   │   │   └── ...
-│   │   ├── components/    # Reusable components
-│   │   ├── hooks/         # Custom hooks
-│   │   ├── contexts/      # React contexts (Accessibility)
-│   │   └── services/      # API services
-├── backend/               # Express backend
-│   ├── src/
-│   │   ├── routes/        # API routes
-│   │   │   ├── imageGeneration.ts
-│   │   │   ├── music.ts
-│   │   │   ├── gallery.ts
-│   │   │   ├── vision.ts
-│   │   │   └── ...
-│   │   └── services/      # Business logic
-│   │       ├── imagenService.ts
-│   │       ├── elevenLabsService.ts
-│   │       ├── geminiService.ts
-│   │       └── ...
-├── shared/                # Shared code between web and mobile
-│   ├── src/
-│   │   ├── api.ts         # Common API client
-│   │   └── types.ts       # Shared TypeScript types
-└── README.md
+## Deployment
+
+### Google Cloud Run Deployment
+
+**Quick deployment:**
+```bash
+# Build and push images
+./gcp/build-and-push-local.sh
+
+# Deploy services
+./gcp/deploy-to-cloudrun.sh
 ```
 
-## Architecture
+**Service management:**
+```bash
+# List services
+./gcp/list-services.sh
 
-See [ARCHITECTURE.md](ARCHITECTURE.md) for detailed architecture diagram and system design.
+# Delete old revisions
+./gcp/delete-old-revisions.sh
+
+# Cleanup unused resources
+./gcp/cleanup-unused.sh
+```
+
+**Architecture:**
+- **Backend**: Deployed as `voicecompanion-backend` service (port 5000)
+- **Frontend**: Deployed as `voicecompanion-frontend` service (port 8080, nginx)
+- **Proxy**: Frontend nginx proxies `/api/*` requests to backend
+- **Container Registry**: Uses GCR (`gcr.io/PROJECT_ID/...`)
+- **Environment Variables**: `BACKEND_URL` and `BACKEND_HOST` set for frontend nginx
+
+For detailed deployment instructions, see [gcp/README.md](gcp/README.md).
+
+## Troubleshooting
+
+### Image Generation Issues
+- Ensure Google Cloud billing is enabled
+- Verify Vertex AI API is enabled
+- Check Imagen API access in your project
+- Verify Application Default Credentials are set up
+
+### Music Generation Issues
+- Music API requires a paid ElevenLabs subscription
+- Check your ElevenLabs plan includes Music Generation access
+- Verify API key is valid and has Music API permissions
+- Falls back to open-source music generation if ElevenLabs fails
+
+### Voice Recognition Issues
+- Check microphone permissions
+- Ensure browser supports Web Speech API
+- For mobile, check app permissions in settings
+
+### Cloud Run Deployment Issues
+- **502 Bad Gateway**: Check `BACKEND_URL` and `BACKEND_HOST` environment variables
+- **404 on API routes**: Verify nginx proxy configuration
+- **Container startup failures**: Check startup logs and environment variables
+- Run diagnostic scripts: `./gcp/diagnose-502.sh` or `./gcp/test-api-proxy.sh`
+
+### Mobile App Issues
+- See [mobile/TROUBLESHOOTING.md](mobile/TROUBLESHOOTING.md) for mobile-specific issues
+- Clear Metro cache: `npx expo start --clear`
+- Rebuild development build if needed
 
 ## Key Features Implementation
 
@@ -317,6 +530,7 @@ See [ARCHITECTURE.md](ARCHITECTURE.md) for detailed architecture diagram and sys
 - **Text-to-Speech API**: Natural voice responses
 - **Speech-to-Text API**: Voice input transcription
 - **Music Generation API**: Convert text/lyrics to music (requires paid subscription)
+- **Fallback Support**: Open-source music generation when ElevenLabs is unavailable
 - Real-time audio playback
 
 ### Google Cloud Gemini Integration
@@ -395,24 +609,7 @@ See [ARCHITECTURE.md](ARCHITECTURE.md) for detailed architecture diagram and sys
 - Music style customization and fine-tuning
 - Real-time collaboration features
 - Advanced accessibility features (haptic feedback, etc.)
-
-## Troubleshooting
-
-### Image Generation Issues
-- Ensure Google Cloud billing is enabled
-- Verify Vertex AI API is enabled
-- Check Imagen API access in your project
-- Verify Application Default Credentials are set up
-
-### Music Generation Issues
-- Music API requires a paid ElevenLabs subscription
-- Check your ElevenLabs plan includes Music Generation access
-- Verify API key is valid and has Music API permissions
-
-### Voice Recognition Issues
-- Check microphone permissions
-- Ensure browser supports Web Speech API
-- For mobile, check app permissions in settings
+- Persistent storage (Firestore/PostgreSQL) for gallery and user data
 
 ## License
 
